@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Jackson House — Brand Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=IM+Fell+English+SC&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#C9A24A;
+    --brass:#8B6B2F;
+    --ink:#0F0F0F;
+    --parch:#F5EEDE;
+    --line:#D8C98F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#2a2a2a;color:var(--ink);font-family:'Playfair Display',serif;line-height:1.55}
+  .page{width:210mm;min-height:297mm;margin:18px auto;background:var(--parch);padding:22mm 20mm;box-shadow:0 8px 30px rgba(0,0,0,0.45);position:relative;overflow:hidden}
+  .page::before{content:"";position:absolute;inset:8mm;border:1px solid var(--line);pointer-events:none}
+  h1,h2,h3{font-family:'Rye',serif;color:var(--ink);font-weight:400;letter-spacing:-0.01em}
+  h1{font-size:72pt;line-height:1.0}
+  h2{font-size:32pt;margin-bottom:14pt}
+  h3{font-size:16pt;margin-bottom:6pt;letter-spacing:0.04em}
+  .eyebrow{font-family:'IM Fell English SC',serif;font-size:11pt;letter-spacing:0.3em;color:var(--brass);text-transform:uppercase;margin-bottom:10pt}
+  .rule{height:1px;background:var(--line);margin:14pt 0}
+  .double-rule{height:4px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:16pt 0}
+  p{font-size:11pt;margin-bottom:10pt;color:#2a2116}
+  ul{padding-left:18pt;font-size:10.5pt;color:#2a2116}
+  li{margin-bottom:4pt}
+  .footer{position:absolute;bottom:14mm;left:20mm;right:20mm;display:flex;justify-content:space-between;font-family:'IM Fell English SC',serif;font-size:9pt;letter-spacing:0.2em;color:var(--brass);text-transform:uppercase}
+  .pageno{font-family:'IM Fell English SC',serif}
+
+  /* Cover */
+  .cover{background:var(--ink);color:var(--parch);display:flex;flex-direction:column;justify-content:space-between}
+  .cover::before{border-color:var(--gold);opacity:0.6}
+  .cover h1{color:var(--gold);font-size:88pt}
+  .cover .eyebrow{color:var(--gold)}
+  .cover .sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22pt;color:var(--parch);opacity:0.9}
+  .cover .foot{color:var(--gold);opacity:0.7;font-family:'IM Fell English SC',serif;letter-spacing:0.3em;font-size:10pt;text-transform:uppercase}
+  .cover .ornament{text-align:center;font-size:40pt;color:var(--gold);opacity:0.8;letter-spacing:12pt}
+
+  /* Logo page */
+  .logo-block{background:var(--ink);padding:40pt;text-align:center;margin:16pt 0}
+  .logo-block.light{background:var(--parch);border:1px solid var(--line)}
+  .logo-block img{max-width:60%;max-height:180pt}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14pt}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12pt}
+  .caption{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:10pt;color:var(--brass);text-align:center;margin-top:6pt}
+  .dont{outline:2px dashed #a33;outline-offset:-6pt;position:relative}
+  .dont::after{content:"✕";position:absolute;top:6pt;right:10pt;font-size:24pt;color:#a33;font-family:'Rye',serif}
+  .clear-demo{display:flex;justify-content:center;align-items:center;background:var(--parch);border:1px solid var(--line);padding:30pt;position:relative}
+  .clear-demo .box{position:relative;padding:36pt;border:1px dashed var(--brass)}
+  .clear-demo img{max-width:220pt}
+
+  /* Colour */
+  .swatch{padding:28pt 18pt;color:var(--parch);font-family:'IM Fell English SC',serif;font-size:10pt;letter-spacing:0.15em;text-transform:uppercase}
+  .swatch .name{font-family:'Rye',serif;font-size:18pt;letter-spacing:0;text-transform:none;margin-bottom:6pt}
+  .swatch .codes{font-family:'Inter',sans-serif;font-size:9pt;letter-spacing:0.05em;opacity:0.85}
+
+  /* Type specimens */
+  .spec{border-top:1px solid var(--line);padding:18pt 0}
+  .spec .label{font-family:'IM Fell English SC',serif;font-size:9pt;letter-spacing:0.25em;color:var(--brass);text-transform:uppercase;margin-bottom:8pt}
+  .spec .big{line-height:1}
+  .scale-row{display:flex;align-items:baseline;gap:14pt;margin-top:10pt;flex-wrap:wrap}
+  .scale-row span{font-family:'Playfair Display',serif}
+
+  /* Voice */
+  .voice-quote{font-family:'Rye',serif;font-size:24pt;color:var(--ink);border-left:2px solid var(--gold);padding:8pt 0 8pt 18pt;margin:12pt 0}
+  .voice-quote .punch{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16pt;display:block;color:var(--brass);margin-top:4pt}
+
+  /* Layout examples */
+  .mock-grid{display:grid;grid-template-columns:1fr 1fr;gap:18pt;margin-top:14pt}
+  .mock{width:100%;aspect-ratio:4/5;background:var(--ink);color:var(--parch);position:relative;overflow:hidden;padding:18pt}
+  .mock.light{background:var(--parch);color:var(--ink);border:1px solid var(--line)}
+  .mock .mk-name{font-family:'Rye',serif;font-size:22pt;color:var(--gold);line-height:1.05;margin-top:auto}
+  .mock .mk-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11pt;margin-top:4pt;opacity:0.9}
+  .mock .mk-footer{position:absolute;bottom:14pt;left:18pt;right:18pt;font-family:'IM Fell English SC',serif;font-size:7pt;letter-spacing:0.2em;display:flex;justify-content:space-between;text-transform:uppercase;opacity:0.85}
+  .mock .mk-top{font-family:'IM Fell English SC',serif;font-size:7pt;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase}
+  .mock .mk-hero{position:absolute;left:0;right:0;top:30%;height:36%;background:linear-gradient(135deg,#3d2f1a,#1a120a);display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:10pt;opacity:0.65}
+  .mock .mk-ornament{position:absolute;top:14pt;right:18pt;color:var(--gold);font-size:14pt;font-family:'Rye',serif;opacity:0.6}
+
+  @media print{
+    body{background:none}
+    .page{box-shadow:none;margin:0;page-break-after:always}
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 — COVER -->
+<section class="page cover">
+  <div>
+    <div class="eyebrow">Brand Style Guide · Vol. I</div>
+    <h1>Jackson<br>House</h1>
+    <div class="sub" style="margin-top:18pt">Delaware Today's Best New Restaurant 2025 — an elevated reissue of the neighbourhood tavern.</div>
+  </div>
+  <div class="ornament">✦  ✦  ✦</div>
+  <div>
+    <div class="double-rule" style="border-color:rgba(201,162,74,0.4)"></div>
+    <div class="foot">17 Wood St · Middletown, DE · @jacksonhousede · v1 · April 2026</div>
+  </div>
+</section>
+
+<!-- PAGE 2 — BRAND ESSENCE -->
+<section class="page">
+  <div class="eyebrow">01 · Brand Essence</div>
+  <h2>Elevated, without the attitude.</h2>
+  <div class="rule"></div>
+  <p>Jackson House is a neighbourhood restaurant that was named Delaware's Best New Restaurant in 2025 — and it hasn't changed the wallpaper because of it. The brand voice is warm and confident, the room is low-lit and gilded, and the menu reads like an 1890s tavern card with contemporary technique underneath. Nothing here should look like it was designed in 2026.</p>
+  <p>Every design decision must earn one of three adjectives — <em>elevated</em>, <em>prestige</em>, or <em>refined</em>. If the asset can also be described as <em>trendy</em>, <em>playful</em>, or <em>generic</em>, pull it.</p>
+  <div class="double-rule"></div>
+  <div class="grid3">
+    <div><h3>Voice</h3><p style="font-size:10pt">Confident · Warm · Understated</p></div>
+    <div><h3>Mood</h3><p style="font-size:10pt">Gilded · Low-lit · Heritage</p></div>
+    <div><h3>Promise</h3><p style="font-size:10pt">Best-of-class food, no pretension</p></div>
+  </div>
+  <div style="margin-top:20pt">
+    <h3>Positioning statement</h3>
+    <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14pt;color:var(--brass);border-left:2px solid var(--gold);padding-left:14pt">For Middletown diners who want a restaurant that respects their Friday night, Jackson House serves seasonal American food and artisanal cocktails in a warmly-lit room — the only Best New Restaurant in Delaware that still feels like the neighbourhood's.</p>
+  </div>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">02</span></div>
+</section>
+
+<!-- PAGE 3 — LOGO -->
+<section class="page">
+  <div class="eyebrow">02 · Logo</div>
+  <h2>The cartouche.</h2>
+  <div class="rule"></div>
+  <p>The Jackson House mark is an ornate cartouche — a gilded nameplate drawn from 19th-century apothecary and tavern signage. It exists in three executions. Always use the execution that matches the background, never invert the foil colour.</p>
+  <div class="grid2" style="margin-top:14pt">
+    <div>
+      <div class="logo-block light"><img src="../../CLIENTS/JACKSON-HOUSE/branding/JACKSON HOUSE PNG LOGO.png" alt="Primary black line"></div>
+      <div class="caption">Primary — black line on parchment</div>
+    </div>
+    <div>
+      <div class="logo-block"><img src="../../CLIENTS/JACKSON-HOUSE/branding/jackson logo white gold.png" alt="Gold foil"></div>
+      <div class="caption">Gold foil — on ink or dark imagery</div>
+    </div>
+  </div>
+  <div class="logo-block light" style="margin-top:12pt"><img src="../../CLIENTS/JACKSON-HOUSE/branding/JACKSON GOLD.png" alt="Gold foil light" style="max-width:42%"></div>
+  <div class="caption">Gold foil lockup — for stationery, menus, signage</div>
+  <div class="double-rule"></div>
+  <h3>Clearspace</h3>
+  <p>Minimum clearspace around the cartouche equals the height of the word "HOUSE" on all four sides. Never crop the scrollwork.</p>
+  <div class="clear-demo" style="margin-top:8pt"><div class="box"><img src="../../CLIENTS/JACKSON-HOUSE/branding/JACKSON HOUSE PNG LOGO.png"></div></div>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">03</span></div>
+</section>
+
+<!-- PAGE 4 — LOGO MISUSE -->
+<section class="page">
+  <div class="eyebrow">02 · Logo continued</div>
+  <h2>Incorrect usage.</h2>
+  <div class="rule"></div>
+  <p>The cartouche is the single most-protected asset in the Jackson House system. Every rule below exists because breaking it reads as counterfeit.</p>
+  <div class="grid2" style="margin-top:10pt">
+    <div>
+      <div class="logo-block light dont" style="background:#fff"><img src="../../CLIENTS/JACKSON-HOUSE/branding/jackson logo white gold.png"></div>
+      <div class="caption">Do not place gold foil on pure white — it reads synthetic. Use ink or parchment.</div>
+    </div>
+    <div>
+      <div class="logo-block dont" style="background:#2b6b3f"><img src="../../CLIENTS/JACKSON-HOUSE/branding/jackson logo white gold.png"></div>
+      <div class="caption">Do not place the mark on coloured fills outside the palette.</div>
+    </div>
+    <div>
+      <div class="logo-block light dont"><img src="../../CLIENTS/JACKSON-HOUSE/branding/JACKSON HOUSE PNG LOGO.png" style="transform:rotate(-8deg)"></div>
+      <div class="caption">Do not rotate, skew, or distort the cartouche.</div>
+    </div>
+    <div>
+      <div class="logo-block light dont"><img src="../../CLIENTS/JACKSON-HOUSE/branding/JACKSON HOUSE PNG LOGO.png" style="filter:drop-shadow(0 6px 0 #a33)"></div>
+      <div class="caption">Do not add shadows, glows, or bevels.</div>
+    </div>
+  </div>
+  <div class="double-rule"></div>
+  <h3>Minimum size</h3>
+  <ul>
+    <li>Digital: 180px wide (the scrollwork stops being legible below this)</li>
+    <li>Print: 1.25" / 32mm wide</li>
+    <li>Instagram avatar: use a simplified "JH" monogram variant — the full cartouche is illegible at 110px</li>
+  </ul>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">04</span></div>
+</section>
+
+<!-- PAGE 5 — COLOUR -->
+<section class="page">
+  <div class="eyebrow">03 · Colour</div>
+  <h2>Ink, foil, and parchment.</h2>
+  <div class="rule"></div>
+  <p>A three-tone palette with one warm-dark accent. Ivory parchment replaces pure white in every context — gold foil on white reads counterfeit. Black anchors the gold so it reads upscale, not flashy.</p>
+  <div class="grid2" style="margin-top:14pt">
+    <div class="swatch" style="background:var(--gold);color:var(--ink)">
+      <div class="name">Antique Gold</div>
+      <div>Primary · Headlines · Logo foil</div>
+      <div class="codes" style="margin-top:14pt">HEX #C9A24A<br>RGB 201 · 162 · 74<br>CMYK 0 · 19 · 63 · 21</div>
+    </div>
+    <div class="swatch" style="background:var(--ink)">
+      <div class="name" style="color:var(--parch)">Ink Black</div>
+      <div>Primary canvas · Body type on parchment</div>
+      <div class="codes" style="margin-top:14pt">HEX #0F0F0F<br>RGB 15 · 15 · 15<br>CMYK 0 · 0 · 0 · 94</div>
+    </div>
+    <div class="swatch" style="background:var(--parch);color:var(--ink)">
+      <div class="name">Parchment Ivory</div>
+      <div>Body canvas · Menu-card surfaces</div>
+      <div class="codes" style="margin-top:14pt">HEX #F5EEDE<br>RGB 245 · 238 · 222<br>CMYK 0 · 3 · 9 · 4</div>
+    </div>
+    <div class="swatch" style="background:var(--brass)">
+      <div class="name" style="color:var(--parch)">Aged Brass</div>
+      <div>Sub-heads · Secondary rules · Captions</div>
+      <div class="codes" style="margin-top:14pt">HEX #8B6B2F<br>RGB 139 · 107 · 47<br>CMYK 0 · 23 · 66 · 45</div>
+    </div>
+  </div>
+  <div class="double-rule"></div>
+  <h3>Usage ratios</h3>
+  <ul>
+    <li><strong>60%</strong> Parchment or Ink (whichever is the canvas)</li>
+    <li><strong>25%</strong> the opposing base (ink on parch, parch on ink)</li>
+    <li><strong>12%</strong> Antique Gold — headlines, rules, ornaments</li>
+    <li><strong>3%</strong> Aged Brass — captions and fine print only</li>
+  </ul>
+  <p style="margin-top:12pt;font-style:italic;color:var(--brass)">Do not introduce a fifth colour. Seasonal campaigns may tint photography, not the palette.</p>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">05</span></div>
+</section>
+
+<!-- PAGE 6 — TYPOGRAPHY -->
+<section class="page">
+  <div class="eyebrow">04 · Typography</div>
+  <h2>Four voices, one letterpress.</h2>
+  <div class="rule"></div>
+  <p>The type system echoes a letterpress menu card. Rye stamps the name, Playfair Display carries the menu, Cormorant Italic softens the quotes, Inter handles the legal. Never mix in a fifth face.</p>
+
+  <div class="spec">
+    <div class="label">Display · Rye · 48–96pt · drink and dish names</div>
+    <div class="big" style="font-family:'Rye';font-size:56pt;color:var(--ink)">Dilly Dally Dirty Martini.</div>
+  </div>
+  <div class="spec">
+    <div class="label">Display alt · IM Fell English SC · all-caps section heads</div>
+    <div class="big" style="font-family:'IM Fell English SC';font-size:32pt;letter-spacing:0.08em;color:var(--ink)">COCKTAILS · SMALL PLATES · BRUNCH</div>
+  </div>
+  <div class="spec">
+    <div class="label">Body · Playfair Display · 16–20pt · captions and menu copy</div>
+    <div class="big" style="font-family:'Playfair Display';font-size:18pt;color:var(--ink);line-height:1.4">Heirloom tomatoes, fresh burrata, basil, balsamic. Some things don't need to be complicated.</div>
+  </div>
+  <div class="spec">
+    <div class="label">Accent · Cormorant Garamond Italic · 14–22pt · pull-quotes and taglines</div>
+    <div class="big" style="font-family:'Cormorant Garamond';font-style:italic;font-size:22pt;color:var(--brass)">You already know.</div>
+  </div>
+  <div class="spec">
+    <div class="label">UI · Inter Regular · 10–12pt · legal and disclaimers</div>
+    <div class="big" style="font-family:'Inter';font-size:11pt;color:var(--brass)">Reservations required for parties of six or more. 17 Wood St, Middletown, DE 19709. Prices subject to change.</div>
+  </div>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">06</span></div>
+</section>
+
+<!-- PAGE 7 — VOICE & TONE -->
+<section class="page">
+  <div class="eyebrow">05 · Voice &amp; Tone</div>
+  <h2>Confident. Never chatty.</h2>
+  <div class="rule"></div>
+  <p>Every Jackson House caption follows the same rhythm: the dish name with a period, one punchy line, the address, the CTA. The punchy line may be declarative, a nod, or a one-word answer. It is never an explanation. The image explains the dish.</p>
+
+  <div class="voice-quote">Dilly Dally Dirty Martini. 🍸<span class="punch">You already know.</span></div>
+  <div class="voice-quote">Burrata. 🍅<span class="punch">Some things don't need to be complicated.</span></div>
+  <div class="voice-quote">Cornbread Muffins. 🧈<span class="punch">Warm out of the oven. Butter melts on contact.</span></div>
+  <div class="voice-quote">Fried Catfish Fingers. 🐟<span class="punch">Crispy, golden, mustard dipping sauce. Southern comfort, Jackson House style.</span></div>
+
+  <div class="double-rule"></div>
+  <div class="grid2">
+    <div>
+      <h3>Do</h3>
+      <ul>
+        <li>Start with the dish name + period + emoji</li>
+        <li>Keep punchline under 10 words when possible</li>
+        <li>Reference the Best New Delaware award sparingly</li>
+        <li>Leave space — one short line is stronger than three</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Don't</h3>
+      <ul>
+        <li>Write the ingredient list unless it's a brand-new dish</li>
+        <li>Use marketing-speak: "amazing", "must-try", "foodie"</li>
+        <li>Quote the chef — the food is the chef</li>
+        <li>Use more than one emoji per caption</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">07</span></div>
+</section>
+
+<!-- PAGE 8 — PHOTOGRAPHY -->
+<section class="page">
+  <div class="eyebrow">06 · Photography</div>
+  <h2>Warm, low-key, one hero.</h2>
+  <div class="rule"></div>
+  <p>Photography is the single largest on-brand signal Jackson House controls. All imagery should look like it was shot inside the restaurant at 7:30pm on a Thursday — warm tungsten light, shallow depth, one hero per frame.</p>
+
+  <div class="grid2" style="margin-top:12pt">
+    <div>
+      <h3>Lighting direction</h3>
+      <ul>
+        <li>Warm tungsten / candlelight (2700–3200K)</li>
+        <li>Single key light, low angle, strong falloff</li>
+        <li>Lift shadows only to ink-black — never grey-black</li>
+        <li>Gold highlights on rim of glassware and plate edges are desirable</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Composition</h3>
+      <ul>
+        <li>One focal dish or drink, centred or rule-of-thirds</li>
+        <li>Overhead for shareable boards; 3/4 angle for mains; low for cocktails</li>
+        <li>Negative space on at least one side for caption/name overlay</li>
+        <li>Never stack multiple dishes in the hero frame — save for carousel slides</li>
+      </ul>
+    </div>
+  </div>
+  <div class="double-rule"></div>
+  <h3>Forbidden</h3>
+  <ul>
+    <li>Flash-lit food. Ever.</li>
+    <li>Cool white backgrounds, marble flatlays, pastel props</li>
+    <li>Hands-in-shot unless the craft is the subject (pouring, plating, garnishing)</li>
+    <li>Generic bokeh overlays or colour filters applied post-shoot</li>
+  </ul>
+  <p style="margin-top:10pt;font-style:italic;color:var(--brass)">When in doubt: if the photo would look at home in a Francis Mallmann cookbook, it's on-brand. If it belongs on a delivery app, it isn't.</p>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">08</span></div>
+</section>
+
+<!-- PAGE 9 — LAYOUT EXAMPLES -->
+<section class="page">
+  <div class="eyebrow">07 · Layout Examples</div>
+  <h2>Four post types.</h2>
+  <div class="rule"></div>
+  <p>Every feed post should come from one of these four templates. Stories and Reels covers extend the same system to 9:16.</p>
+
+  <div class="mock-grid">
+    <div class="mock">
+      <div class="mk-top">Jackson House · @jacksonhousede</div>
+      <div class="mk-hero">[ drink hero image ]</div>
+      <div style="margin-top:auto">
+        <div class="mk-name">Dilly Dally<br>Dirty Martini.</div>
+        <div class="mk-tag">You already know.</div>
+      </div>
+      <div class="mk-ornament">✦</div>
+      <div class="mk-footer"><span>17 Wood St · Middletown</span><span>Reserve · link in bio</span></div>
+    </div>
+    <div class="mock light">
+      <div class="mk-top" style="color:var(--brass)">Menu · Spring 2026</div>
+      <div class="mk-hero" style="background:#e7d9b4;color:var(--brass)">[ dish hero image ]</div>
+      <div style="margin-top:auto">
+        <div class="mk-name" style="color:var(--ink)">Burrata.</div>
+        <div class="mk-tag" style="color:var(--brass)">Some things don't need to be complicated.</div>
+      </div>
+      <div class="mk-ornament" style="color:var(--brass)">✦</div>
+      <div class="mk-footer" style="color:var(--brass)"><span>17 Wood St · Middletown</span><span>Reserve · link in bio</span></div>
+    </div>
+    <div class="mock">
+      <div class="mk-top">Delaware Today · Best New 2025</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;margin:auto 0">
+        <div style="font-family:'Rye';font-size:32pt;color:var(--gold);text-align:center;line-height:1.05">Best<br>New<br>Restaurant.</div>
+      </div>
+      <div class="mk-tag" style="text-align:center">Delaware Today · 2025</div>
+      <div class="mk-footer"><span>17 Wood St · Middletown</span><span>@jacksonhousede</span></div>
+    </div>
+    <div class="mock light">
+      <div class="mk-top" style="color:var(--brass)">BTS · Bar Craft</div>
+      <div class="mk-hero" style="background:#c9a24a;color:var(--ink);opacity:0.85">[ bartender candid ]</div>
+      <div style="margin-top:auto">
+        <div class="mk-name" style="color:var(--ink)">Shaken.</div>
+        <div class="mk-tag" style="color:var(--brass)">Every drink, by hand, every service.</div>
+      </div>
+      <div class="mk-footer" style="color:var(--brass)"><span>17 Wood St · Middletown</span><span>Reserve · link in bio</span></div>
+    </div>
+  </div>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">09</span></div>
+</section>
+
+<!-- PAGE 10 — SOCIAL SPECS -->
+<section class="page">
+  <div class="eyebrow">08 · Social Specs &amp; Standards</div>
+  <h2>The template ruleset.</h2>
+  <div class="rule"></div>
+  <div class="grid2">
+    <div>
+      <h3>Canvas</h3>
+      <ul>
+        <li>Feed: 4:5 · 1080 × 1350 px</li>
+        <li>Reels cover: 9:16 · 1080 × 1920 px</li>
+        <li>Story: 9:16 · 1080 × 1920 px</li>
+      </ul>
+      <h3 style="margin-top:14pt">Safe area</h3>
+      <ul>
+        <li>48px margin on all sides (feed)</li>
+        <li>180px top / 280px bottom safe area on Reels (avoids UI)</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Caption structure</h3>
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12pt;color:var(--brass)">[Dish/Drink Name]. [emoji]<br>[One punchy line.]<br>📍 17 Wood St, Middletown, DE 19709<br>Reserve your table | link in bio 📍</p>
+      <h3 style="margin-top:14pt">Posting schedule</h3>
+      <ul>
+        <li>Monday: images (food or cocktails)</li>
+        <li>Friday: images (food or cocktails)</li>
+        <li>Wednesday: BTS / culture / reel</li>
+      </ul>
+    </div>
+  </div>
+  <div class="double-rule"></div>
+  <h3>Asset checklist before every post</h3>
+  <ul>
+    <li>☐ Photo is warm-lit, single-focus, negative space on one side</li>
+    <li>☐ Drink/dish name in Rye ≥48pt, left-aligned, on ink or parchment (never pure white)</li>
+    <li>☐ Tagline ≤10 words, Cormorant Italic or Playfair</li>
+    <li>☐ One ornament max — scrollwork flourish only from the logo family</li>
+    <li>☐ Footer includes address + CTA</li>
+    <li>☐ No emojis beyond the one in the caption</li>
+  </ul>
+  <div class="footer"><span>Jackson House · Brand Style Guide</span><span class="pageno">10</span></div>
+</section>
+
+<!-- PAGE 11 — CLOSING -->
+<section class="page cover" style="justify-content:center;text-align:center">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column">
+    <img src="../../CLIENTS/JACKSON-HOUSE/branding/jackson logo white gold.png" style="max-width:55%;max-height:220pt">
+    <div style="font-family:'Cormorant Garamond';font-style:italic;font-size:18pt;color:var(--parch);opacity:0.85;margin-top:20pt">End of Guide · v1 · April 2026</div>
+    <div class="ornament" style="margin-top:20pt">✦</div>
+    <div class="foot" style="margin-top:30pt">Maintained by DreamArt Studio for Savora</div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Secrets
+.env
+.env.local
+*.key
+api_keys.py
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# Node (if HTML generator grows a JS build)
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Generated outputs — keep folder structure via .gitkeep, ignore binary PNGs
+OUTPUT/nano_banana/**/*.png
+OUTPUT/nano_banana/**/*.jpg
+# HTML previews are fine to track if you want version control; currently ignored by default
+OUTPUT/claude_design/**/variation_*.html
