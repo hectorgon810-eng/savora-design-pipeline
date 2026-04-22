@@ -66,14 +66,36 @@ if not API_KEY:
 # the preview model isn't available on this account — runner catches the
 # error and retries with GEMINI_IMAGE_MODEL_FALLBACK.
 IMAGE_MODEL = os.environ.get(
-    "GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image-preview"
+    "GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview"
 )
 IMAGE_MODEL_FALLBACK = os.environ.get(
-    "GEMINI_IMAGE_MODEL_FALLBACK", "gemini-2.5-flash-image"
+    "GEMINI_IMAGE_MODEL_FALLBACK", "gemini-3.1-flash-image-preview"
 )
 
 CLOUDINARY_URLS_PATH = ROOT / "cloudinary_urls.json"
 LOGOS_DIR = ROOT / "BRAND_PROFILES" / "logos"
+
+# OpenAI key — pulled from centralized key file (or env var fallback)
+def _load_openai_key() -> str:
+    env_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if env_key:
+        return env_key
+    cll_path = pathlib.Path("/Users/dreamartstudio/Desktop/CLL_PIPELINE")
+    if cll_path.exists() and str(cll_path) not in sys.path:
+        sys.path.insert(0, str(cll_path))
+    try:
+        import api_keys  # noqa: WPS433
+        return getattr(api_keys, "OPENAI_API_KEY", "").strip()
+    except ImportError:
+        return ""
+
+
+OPENAI_API_KEY = _load_openai_key()
+OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-2")
+# Fallback disabled by default — gpt-image-1 is the old model and defeats the
+# purpose of the NB-vs-ChatGPT 2.0 comparison. Set OPENAI_IMAGE_MODEL_FALLBACK
+# env var to re-enable.
+OPENAI_IMAGE_MODEL_FALLBACK = os.environ.get("OPENAI_IMAGE_MODEL_FALLBACK", "")
 
 
 # ============================================================
@@ -100,22 +122,39 @@ LOGO: real Azteca warrior logo (supplied as second reference) placed at 80–120
 
 Photography style: daylight-bright, slightly oversaturated, warm Portra 400 film grain ON THE PHOTO ONLY (not added on top of design). Hand-made, family, warm, bilingual Spanish-primary.
 
-VOICE SEED (Azteca-only — do not reuse across other brands): family-warm, bilingual Spanish-primary, celebration energy. Voice examples from the AZ feed: "Guacamole, but make it octopus." · "Not your average appetizer." · "We don't do things halfway." · "Pick your poison." · "Cocktail hour." · "Classic for a reason." Voice is celebratory-familiar, never ironic-detached. When writing COPY OPTION (c), ANALYZE THE SPECIFIC DISH (its ingredients, its regional origin, its role in a Mexican family meal) and write a 2–3 candidate lines drawn from THIS voice and THIS plate. Do NOT use smart-mouth punchlines ("You already know") — that's Jackson House voice, wrong brand. Spanish phrase OK if it fits ("De la casa", "¡Con gusto!", "Auténtico").""",
+VOICE SEED (Azteca-only — do not reuse across other brands): family-warm, bilingual Spanish-primary, celebration energy. Voice examples from the AZ feed: "Guacamole, but make it octopus." · "Not your average appetizer." · "We don't do things halfway." · "Pick your poison." · "Cocktail hour." · "Classic for a reason." Voice is celebratory-familiar, never ironic-detached. When writing COPY OPTION (c), ANALYZE THE SPECIFIC DISH (its ingredients, its regional origin, its role in a Mexican family meal) and write a 2–3 candidate lines drawn from THIS voice and THIS plate. Do NOT use smart-mouth punchlines ("You already know") — that's Jackson House voice, wrong brand. Spanish phrase OK if it fits ("De la casa", "¡Con gusto!", "Auténtico").
+
+HAND-DRAWN ACCENT (Azteca — OPTIONAL, sparing): AZ already carries hand-drawn arrows as its signature (see arrow rule above). BEYOND arrows, zero or one additional ornament per layout is allowed from the AZ-world library: chile silhouette, corn cob outline, tortilla-press mark, skull/Day-of-Dead hairline, warrior-shield mini-mark, hand-drawn star-burst, sun-ray hairline, lime-wedge cross-section. NEVER agave (BM). NEVER wheat/butter/flame (JH). Do not stack ornaments AND arrows heavily — if arrows are present, ornament budget is zero unless clearly additive.""",
 
     "azteca_heritage": """A social media image for Azteca, a family Mexican restaurant, heritage register. Brand palette: cobalt #1A3FA8, marigold #F2A900, chile red #D72638, masa cream #F3ECD8, oxblood #6E1423, turquoise #1FB5B0. Typography: bold display serif (Cooper Black / Obviously feel) paired with handwritten script annotations. Texture: papel picado paper cutouts, halftone overlay, slight off-axis rotation, warm Portra 400 grain. Photography style: overhead flat-lay or three-quarter daylight, 5500K, soft shadow upper-right. Hand-made, bilingual Spanish primary, warm-vernacular heritage-maximalist.""",
 
     "blue_mezcal_editorial": """A social media image for Blue Mezcal, an upscale agave-forward bar and kitchen. Brand palette: cobalt blue #1E3A8A, bone cream #F3ECD8, marigold #F2A900, agave green #4E6B3A, charred black #1C1A17. Typography: refined editorial serif headlines with tight tracking, paired with quiet modern grotesque small-caps labels. Texture: fine noise overlay at 5%, subtle handmade paper grain, restrained. Photography style: moody low-light with directional rim, tungsten 3000K warmth or editorial 5200K daylight depending on scene. Editorial-modernist restraint, 60–65% negative space.""",
 
-    "blue_mezcal_playful": """A social media image for Blue Mezcal — upscale agave bar, PLAYFUL-EDITORIAL register. Still high-end, but with energy: think Casa Azul NYC × Intelligentsia × Dandelion Chocolate. Editorial spine, more fun than luxury-moody.
+    "blue_mezcal_playful": """A social media image for Blue Mezcal — an upscale agave-forward bar AND kitchen that is SOCIAL, BOLD, FUN, and cocktail-forward. Think of Blue Mezcal as THE BOLD SIBLING OF AZTECA — same cultural heart, more adult, more cocktail, more elevated Mexican food. Reference anchors: Casa Azul NYC (daylight editorial polish + nighttime energy), Handshake Speakeasy Mexico City (social insider bar), Licorería Limantour (rowdy-chic), Cosme (Enrique Olvera's upscale but PACKED and buzzing). NOT quiet. NOT a library. NOT Céline-minimal. Fun, social, bartender-confident — people come here for DRINKS + elevated Mexican dishes.
 
-BRAND-IDENTITY ANCHOR (critical): Blue Mezcal IS blue + white. Cobalt #1E3A8A and bone cream #F3ECD8 are the dominant pairing. This is the colour signature of the account — every post should be instantly recognizable as Blue Mezcal at a glance. NO burgundy-dominant grounds. NO brass-on-black nocturnal treatment.
+The graphic identity runs with EDITORIAL POLISH (restrained grids, refined serifs, controlled palette) to signal seriousness — but the activations run with CONFIDENT ENERGY (oversized type, bold color blocks, after-hours moodiness when the register calls for it) to signal life. Editorial discipline ↔ party energy. Never drop either side.
 
-PRIMARY GROUND OPTIONS (pick one, always with 5–10% tonal gradient, never flat):
+BRAND-IDENTITY ANCHOR (NON-NEGOTIABLE): Blue Mezcal = BLUE + CREAM. Cobalt #1E3A8A and bone cream #F3ECD8 are the DOMINANT 60/30 pairing on every post — one must dominate, the other must support. This is the colour signature of the account. Every post should be recognizable as Blue Mezcal in under one second based on palette alone.
+
+COMPLEMENT PALETTE (ACCENTS ONLY — never dominant, each capped at under 10-15% of canvas):
+- Marigold #F2A900 — accent word or ornament only
+- Agave green #4E6B3A — occasional pull only
+- Chile red #D72638 — complement for warm-dish photos only
+- Charred black #1C1A17 — footer / small-caps ink only
+
+FORBIDDEN in the playful register: burgundy-dominant grounds, brass-foil-on-black nocturnal treatment (that's a separate stem), turquoise, hot pink, any color outside the locked palette above.
+
+PRIMARY GROUND OPTIONS (pick one, always with 5–10% tonal gradient — never flat):
 - Cobalt #1E3A8A → deep midnight-cobalt #14213D gradient field
 - Bone cream #F3ECD8 → warm ivory #E8DBB8 gradient field
-- OR half-and-half split (cobalt + bone) with the photo bridging the seam
+- OR a two-field split (cobalt + bone) with the photo bridging or sitting in one field
 
-TYPE TREATMENT: refined editorial serif (Canela / GT Sectra / Tiempos) as hero, but with playful moves allowed — italic at odd scale, one word larger than the rest, hairline hand-drawn underline, a small ornament (agave leaf, a hand-drawn salt-rim mark, a single dot). Body/labels in quiet grotesque small-caps (Söhne / Neue Haas / GT America). Marigold #F2A900 allowed as a single accent word or ornament only (< 10% of layout). White/cream type on cobalt, cobalt type on cream.
+TYPE TREATMENT: refined editorial serif (Canela / GT Sectra / Tiempos Headline) as hero. Playful moves ALLOWED: italic at odd scale, one word larger than the rest, hairline hand-drawn underline, script+serif dual-weight lockup, oversized type that wraps or interacts with the photo (Chomp City move, earned — max 1 in 6 posts). Body/labels in quiet grotesque small-caps (Söhne / Neue Haas / GT America). White/cream type on cobalt, cobalt type on cream. NEVER use all three colors (cobalt + cream + a complement) at equal weight — palette always reads blue-and-cream first.
+
+COHESION TEST (applies to EVERY post): at least TWO of these three must appear, or the post fails review:
+  1. A refined serif in italic OR small-caps, at some scale
+  2. Cobalt + bone-cream dominant in 60/30 ratio (one register per post, never mixed with the nocturnal brass/burgundy)
+  3. A 5-12% tonal gradient on at least one color field (never a pure flat hex fill)
 
 PHOTO-LED COMPLEMENT RULE (mandatory): analyze the dominant hue of the supplied drink/dish photograph first. Pick the ground colour that OPPOSES that dominant hue:
   - Warm drink (amber, yellow, orange, peach) → cobalt #1E3A8A ground (cool opposes warm)
@@ -126,7 +165,7 @@ State which hex you chose and why before composing.
 
 COMPOSITION ENERGY: asymmetric layouts OK. A single oversized word (the drink/dish name) taking 40–50% of canvas, with a small smart-mouthed supporting phrase nearby. Or a full-bleed photo with a cobalt band wrapping one edge and a marigold hand-drawn accent. Rule-of-thirds, tension, movement. NOT symmetric menu-card layouts.
 
-HAND-DRAWN ACCENT (Blue Mezcal signature): one — only one — hand-drawn mark per layout. The APPROVED signature mark is a small hand-drawn agave silhouette (one leaf or whole plant, inked hairline) — use it as the recurring BM ornament when in doubt. Other allowed: hand-drawn salt-rim arc, hairline underline, a single dot. Not six stickers. One precise mark that feels made by a human.
+HAND-DRAWN ACCENT (Blue Mezcal — OPTIONAL, not every post): Zero or one hand-drawn mark per layout — default is ZERO, add only if the composition asks for it. When used, draw from a small library of BM-world vector ornaments (inked hairline, made-by-human feel): agave leaf or whole plant silhouette, salt-rim arc, citrus wedge cross-section, smoke curl, single dot, mezcal worm outline, hand-drawn hairline underline, ice-cube cube, cocktail-stirrer line. Rotate — agave is ONE option, not mandatory. Never stack multiple ornaments. If the layout already has photo + type doing the work, skip the ornament entirely.
 
 COPY PERSONALITY RULE (critical — NOT every post leads with the dish/drink name):
 When option (b) or (c) is used, the subject name can drop to small-caps subhead size or disappear entirely — the photo carries identification. Default: mix across a variation set.
@@ -164,6 +203,8 @@ TYPOGRAPHY: old-style serif display (Farnham / Sentinel / Caponi) rendered AS me
 TEXTURE: fine noise grain 5–8% overlay on every field; subtle paper-grain impression UNDER the brass-foil type (as if foil stamped on textured bookbinding paper); Portra 800 film-grain emulation on all photography; faint edge vignette. NO rustic cream kraft paper, NO letterpress-on-ivory (that reads too casual-wedding). This is foil-stamped elegance, not farm-table rustic.
 
 VOICE SEED (Jackson House-only — do not reuse across other brands): classical, warm, telegraphic, knowing-confident. Voice examples from the JH feed: "You already know." · "Some things don't need to be complicated." · "Warm out of the oven. Butter melts on contact." · "Reserve your table." Tavern-confident, not ironic, not celebratory — the register of a chef who trusts the food. When writing COPY OPTION (c), ANALYZE THE SPECIFIC DISH (its comfort-food heritage, its texture, the moment it's eaten) and write 2–3 candidate lines drawn from THIS voice and THIS plate. Do NOT use Spanish phrases (wrong brand — AZ/BM only). Do NOT use celebration-warm voice (AZ) or poetic-moody voice (BM).
+
+HAND-DRAWN ACCENT (Jackson House — OPTIONAL, not every post): Zero or one mark per layout — default is ZERO. When used, pull from JH-world library rendered as BRASS-FOIL HAIRLINE OR INKED WARM-CREAM hairline: wheat sheaf, rolling pin, butter pat silhouette, fork-and-knife cross, flame curl, cast-iron skillet outline, single olive sprig, coffee bean, wine-glass silhouette, hairline brass underline rule. NEVER agave (that's BM). NEVER warrior/chile (that's AZ). Never stack ornaments. If photo + foil type already carry the layout, skip the ornament entirely.
 
 PHOTOGRAPHY: warm tungsten candlelight 2800K, shallow depth of field, Portra 800 film look, deep blacks, rich midtones. Comfort food stays photographed as comfort food — generous portions — but the type treatment elevates it. Balance: approachable dish, elevated frame.""",
 }
@@ -284,8 +325,8 @@ VARIATION_ANGLES = [
     "Variation 1 — FLY-BY-JING MOVE. Ground is a saturated brand-color gradient (cobalt→midnight / oxblood→black / marigold→chile-red, brand-appropriate) covering the full canvas. Photo of the dish/drink sits RIGHT-HALF (roughly 50–55% of canvas), cleanly composed against the gradient. Headline sits LEFT-HALF at Knockout-style condensed sans caps, 180–260px equivalent, in warm ivory or a contrasting brand-palette hex. ONE KEY WORD in the headline is wrapped in a highlighter-block (bright yellow / marigold / brand-accent rectangle behind just that word). Clever analogical copy preferred — COPY OPTION (c) derived from dish + brand voice.",
     "Variation 2 — GHIA CLEAN-GROUND ELEGANCE. Pure ivory / warm-cream / bone-white ground (#F3ECD8 or #F7F2E6, never pure #FFFFFF — always with subtle tonal gradient). The drink/dish photo sits as the clear hero, centered or slightly off-center, 55–70% of canvas, the product's own color doing the visual work. Headline overlay in UPPER-LEFT: SERIF CAPS pairing (e.g. \"ALL ABOUT\" small caps + bigger SCRIPT / ITALIC of the dish name) OR simply a deep-wine / cobalt serif caps drink-name treatment. Deeply elegant, minimal, high-end product-photography feel. COPY OPTION (a) works well; (c) if a poetic line fits.",
     "Variation 3 — 101 EDITORIAL / EDUCATIONAL FOOTER BAND. Photo fills the top 65–70% of canvas at full scale (overhead or 3/4 composition). Bottom 30–35% is a LOUD saturated brand-color band carrying the main headline in two weights: one oversized term in brand-accent color + \"101\" in a contrasting color at equal size (e.g. \"MARGARITA 101\" or \"MEZCAL 101\"), plus a small-caps one-line subhead below (\"everything you need to know before the first sip\"). A small brand-masthead strip (~8% height) runs along the top with the wordmark. COPY OPTION uses topical-educational phrasing, not dish-name-first.",
-    "Variation 4 — photo full-bleed; headline in a vertical color-block STRIP down the LEFT 30% of the canvas, photo occupies the right 70% at full scale. CRITICAL: type sizes to fit the strip — large enough to read, never cramped. Multi-line headline stacks vertically within the strip; never rotates 90°. Approved BM signature: small hand-drawn agave-leaf ornament low in the strip (BM only). Headline uses COPY OPTION (a).",
-    "Variation 5 — SWEETGREEN AWARD MOVE. Photo full-bleed, dark-cinematic or high-saturation. Two-line headline treatment: (i) a SMALL italic serif line reading \"Best [X] in a [Y]\" style mock-award (e.g. \"Best Kick in a Margarita\" / \"Best Crust in a Comfort Dish\" / \"Best Texture in a Taco\"), (ii) below it the LOUD sans caps dish name in neon-yellow or bright contrasting brand-accent, 200–280px equivalent. Type lives lower-third or lower-left. Photo must be legible underneath; contrast-guard mandatory. COPY: mock-award line is (c)-derived, dish name is (a) verbatim.",
+    "Variation 4 — photo full-bleed; headline in a vertical color-block STRIP down the LEFT 30% of the canvas, photo occupies the right 70% at full scale. CRITICAL: type sizes to fit the strip — large enough to read, never cramped. Multi-line headline stacks vertically within the strip; never rotates 90°. Optional single brand-world vector ornament low in the strip (zero or one only — NOT always agave; pick from BM library). Headline uses COPY OPTION (a).",
+    "Variation 5 — SWEETGREEN AWARD MOVE. HARD RULE: photo occupies ≥55% of canvas, full-bleed, NOT cropped to leave a text zone larger than 45%. Type lockup is confined to a BOTTOM-THIRD STRIP ONLY (bottom 30–35% of canvas) or a TOP-THIRD STRIP — never both, never middle. Within the strip: (i) a SMALL italic serif mock-award line (\"Best [X] in a [Y]\" — e.g. \"Best Kick in a Margarita\"), (ii) LOUD sans-caps dish name in brand-accent color at 180–240px equivalent. Strip has semi-opaque ground so photo stays legible underneath. NO dead space — if the composition ends up with large empty regions, shrink the strip and expand the photo. COPY: mock-award line is (c)-derived, dish name is (a) verbatim.",
     "Variation 6 — RECIPE SIDEBAR / INGREDIENT EDITORIAL. Photo fills the RIGHT 60% of canvas at full scale. Left 40% is a quiet brand-palette field carrying: (i) drink/dish name in small serif at top, (ii) 3 ingredient lines stacked in small-caps with hairline rules between (e.g. \"BLANCO TEQUILA · LIME · CUCUMBER\"), (iii) a one-line method at the bottom (\"shaken, black-salt rim\"). Entire column reads like a cocktail menu page. No color block floats, no wedges cutting the photo. Headline uses COPY OPTION (a).",
     "Variation 7 — DRAMATIC CROP + CLEVER-ANALOGY COPY. Photo is COMPOSED tight on a single visual detail (rim + garnish, condensation, grill marks, crust edge). Type sits in the clean negative-space zone the crop creates. Headline is a CLEVER ANALOGICAL LINE (\"The sourdough of noodles\" style — a cultural-reference joke only THIS dish at THIS brand could say), in bold sans or serif caps. Subject name appears as small subhead below. CONTRAST GUARD applies. COPY OPTION (c) mandatory.",
     "Variation 8 — FRENCHETTE SCRIPT + SERIF LOCKUP. Warm cream ground (#F3ECD8 or #F7F2E6) with subtle tonal gradient. ALL INK IN A SINGLE BRAND-ACCENT COLOR (cobalt for BM, brass for JH, chile-red for AZ) — no 3rd color. Headline uses MIXED-WEIGHT TREATMENT: one word in SCRIPT/CURSIVE (e.g. \"All about\", \"Chef's\"), one word in SERIF CAPS at 1.5× the script size (e.g. \"SPICY\", \"BEST\"), italic emphasis on one supporting word in a subhead. Photo occupies the lower 50% of canvas OR a framed rectangle in the middle. Top strip carries a small-caps fact line (venue · date · event tag). Disciplined editorial one-color restraint. COPY OPTION (c) with italic emphasis.",
@@ -358,6 +399,65 @@ def build_scene_paragraph(
         "typography, colour fields, motifs, and textures."
     )
 
+    factual_integrity_lock = (
+        "FACTUAL-INTEGRITY RULE (NON-NEGOTIABLE — HIGHEST PRIORITY):\n"
+        "  This is real restaurant marketing for real clients. Every word rendered on the image\n"
+        "  MUST be factually accurate. DO NOT INVENT:\n"
+        "    - Staff names, titles, or roles (a person named on a post must actually work there)\n"
+        "    - Magazine / publication / quarterly titles ('Blue Mezcal Quarterly' does not exist)\n"
+        "    - Issue numbers, edition labels, 'Vol. II' references\n"
+        "    - Event names not supplied in this prompt\n"
+        "    - Drink names, dish names, prices, dates, times not supplied\n"
+        "    - Award names, certifications, rankings\n"
+        "    - 'Est. [year]' dates unless supplied\n"
+        "    - Fake product lines, merchandise, collaborations\n"
+        "  ONLY use factual content that comes from these exact sources:\n"
+        "    1. The 'subject' field supplied in this prompt\n"
+        "    2. The 'support' field supplied in this prompt\n"
+        "    3. The brand profile's documented address, wordmark, and operational lines\n"
+        "    4. Documented voice seeds (dichos, signatures) written in the brand stem\n"
+        "  If a layout feels empty without more copy, REDUCE THE COPY rather than invent — negative\n"
+        "  space is always better than fabricated facts.\n"
+        "\n"
+        "CROSS-BRAND ISOLATION (non-negotiable):\n"
+        "  Staff, bartender, and chef names are brand-specific and NEVER cross between brands.\n"
+        "  - Selena = Jackson House bartender ONLY. Never render 'Selena' on a Blue Mezcal or\n"
+        "    Azteca post under any circumstance.\n"
+        "  - Do not invent team-member names for any brand. If no real staff name is supplied,\n"
+        "    skip the personality-credit line entirely.\n\n"
+    )
+
+    real_image_lock = (
+        "REAL-IMAGE IDENTITY LOCK (NON-NEGOTIABLE — HIGHEST PRIORITY):\n"
+        "  The attached reference photograph of the dish/drink is REAL PROFESSIONAL PHOTOGRAPHY\n"
+        "  produced by Savora. It is NOT a style reference, NOT a prompt, NOT inspiration. It is\n"
+        "  the FINAL DISH IMAGE that must appear verbatim in the output.\n"
+        "\n"
+        "  YOU MUST NOT:\n"
+        "    - regenerate, redraw, repaint, or restyle the dish\n"
+        "    - substitute a different-looking version of the dish\n"
+        "    - change the angle, lighting, plating, garnish, sauce pattern, char marks, glass shape,\n"
+        "      ice, crema, herbs, or any visible element of the actual food\n"
+        "    - apply a filter, stylization, or 'photographic re-interpretation' to the plate\n"
+        "    - generate a new photograph that looks similar but is not the reference\n"
+        "    - AI-hallucinate plausible food textures in place of the real pixels\n"
+        "\n"
+        "  YOU MUST:\n"
+        "    - treat the reference photograph as a LOCKED COMPOSITE LAYER — pixel-accurate, placed\n"
+        "      into the design untouched\n"
+        "    - match the reference frame-for-frame (same crop, same color, same shadows, same\n"
+        "      moisture on the glass, same grill marks on the steak, same garnish position)\n"
+        "    - compose the graphic design AROUND, BESIDE, or ON TOP OF the locked photo — never\n"
+        "      regenerate the photo itself\n"
+        "    - if the layout needs the photo cropped, silhouetted, or cut-out, do so using the\n"
+        "      ACTUAL reference pixels — not a re-painted imitation\n"
+        "\n"
+        "  This is a Savora brand rule. Serving AI-generated food imagery as our photography is\n"
+        "  a breach of client trust. The dish pixels are sacred. Design around them.\n\n"
+        if has_reference_photo
+        else ""
+    )
+
     logo_instruction = (
         "LOGO RULE (use supplied logo image as-is):\n"
         "  A second reference image is attached — the brand's ACTUAL logo. Place this logo "
@@ -388,11 +488,12 @@ def build_scene_paragraph(
         f"COMPOSITION: {fmt.composition_cue}\n\n"
         f"HEADLINE OPTIONS (pick ONE — variation-dependent — see COPY PERSONALITY RULE in stem):\n"
         f"  (a) DEFAULT — subject name verbatim, no paraphrasing, no misspellings: \"{subject}\"\n"
-        f"  (b) a feeling/mood line derived FROM THIS SPECIFIC DISH (use the SUPPORT LINE as raw material — e.g. if support says \"Black salt rim. Cucumber crown. Cool and dangerous.\" a valid mood line is \"Cool and dangerous.\").\n"
+        f"  (b) a feeling/mood line derived FROM THIS SPECIFIC DISH (use the body-copy phrase below as raw material — e.g. if the phrase is \"Black salt rim. Cucumber crown. Cool and dangerous.\" a valid mood line is \"Cool and dangerous.\").\n"
         f"  (c) a personality line DERIVED FROM the specific dish + the brand's voice signature (see VOICE SEED in the brand stem). Do NOT reuse example lines from OTHER brands' voice seeds — generate fresh copy that ONLY makes sense for THIS dish at THIS restaurant.\n"
         f"  Default heavily to (a). Use (b) or (c) only when the line adds real personality and still identifies the dish. If using (b)/(c), subject name may appear as small subhead or be omitted.\n"
-        f"SUPPORT LINE (quote exactly when used as body copy): \"{support}\"\n"
-        f"FOOTER LINE — render this EXACT text at the bottom margin as a single low-key hairline-ruled line (NEVER print the word \"CTA\" or \"ADDRESS\" literally on the image — those are labels for you, not content): \"{address_cta}\"\n"
+        f"BODY COPY (quote exactly when rendered): \"{support}\"\n"
+        f"BOTTOM-MARGIN LINE — render this EXACT text at the bottom margin as a single low-key hairline-ruled line: \"{address_cta}\"\n"
+        f"NO-LITERAL-LABEL RULE (non-negotiable): NEVER print any of these meta-label words on the final image — they are instructions to you, NOT content to render: CTA, ADDRESS, SUPPORT LINE, FOOTER LINE, BOTTOM-MARGIN LINE, HEADLINE, SUBHEAD, BODY COPY, HEADER, LABEL, COPY OPTION, VARIATION, WORDMARK, AWARD BADGE, WORD-SPILL, DEFAULT. If any of those words leak onto the canvas, the image fails review.\n"
         f"{logo_instruction}"
         f"{award_instruction}"
         f"VARIATION DIRECTION: {variation_angle}\n\n"
@@ -417,6 +518,8 @@ def build_scene_paragraph(
         f"  CUTS THROUGH the primary photo region are forbidden. Color fields sit adjacent to the\n"
         f"  photo, extend from one edge inward, or occupy a corner — they never bisect the dish or\n"
         f"  glass. If the chosen variation angle creates a slash through the hero, reshape it.\n\n"
+        f"{factual_integrity_lock}"
+        f"{real_image_lock}"
         f"LUXURY-TEXTURE RULE (non-negotiable):\n"
         f"  * Every colour field MUST have a subtle tonal gradient (5–12% shift from one edge to "
         f"    the opposite edge). NEVER use a pure flat hex fill. Flat fills read cheap and digital.\n"
@@ -571,6 +674,17 @@ def main() -> None:
         action="store_true",
         help="Skip award-badge injection (JH only)",
     )
+    parser.add_argument(
+        "--backend",
+        default="gemini",
+        choices=["gemini", "openai", "both"],
+        help="Image backend. 'both' splits count evenly: first half Gemini, second half OpenAI.",
+    )
+    parser.add_argument(
+        "--angle",
+        default=None,
+        help="Override variation angle(s). If set, this exact string replaces the VARIATION_ANGLES pick for every variation in the batch. Used for targeted single-style tests.",
+    )
     args = parser.parse_args()
 
     meta = BRAND_META[args.brand]
@@ -613,12 +727,28 @@ def main() -> None:
     # Log prompts for reproducibility
     prompts_log = out_dir / "prompts.jsonl"
 
-    client = genai.Client(api_key=API_KEY)
+    gem_client = genai.Client(api_key=API_KEY)
+
+    oai_client = None
+    if args.backend in ("openai", "both"):
+        if not OPENAI_API_KEY:
+            sys.exit("OPENAI_API_KEY missing. Add to /Users/dreamartstudio/Desktop/CLL_PIPELINE/api_keys.py or export env var.")
+        from openai_backend import build_client as _oai_build, generate_with_retry_openai  # type: ignore
+        oai_client = _oai_build(OPENAI_API_KEY)
+
+    # Decide per-job backend routing
+    if args.backend == "gemini":
+        backends = ["gemini"] * args.count
+    elif args.backend == "openai":
+        backends = ["openai"] * args.count
+    else:  # both
+        half = args.count // 2
+        backends = ["gemini"] * half + ["openai"] * (args.count - half)
 
     # Build prompts for each variation
     jobs = []
     for i in range(args.count):
-        angle = VARIATION_ANGLES[i % len(VARIATION_ANGLES)]
+        angle = args.angle if args.angle else VARIATION_ANGLES[i % len(VARIATION_ANGLES)]
         prompt_text = build_scene_paragraph(
             stem_key=stem_key,
             fmt=fmt,
@@ -631,13 +761,14 @@ def main() -> None:
             has_logo=logo_bytes is not None,
             award_badge=award_badge,
         )
-        jobs.append((i + 1, angle, prompt_text))
+        jobs.append((i + 1, angle, prompt_text, backends[i]))
 
     # Log all prompts
     with prompts_log.open("w") as fh:
-        for idx, angle, text in jobs:
+        for idx, angle, text, backend in jobs:
             fh.write(json.dumps({
                 "variation": idx,
+                "backend": backend,
                 "brand": args.brand,
                 "stem": stem_key,
                 "format": args.format,
@@ -650,30 +781,118 @@ def main() -> None:
                 "prompt": text,
             }) + "\n")
 
-    print(f"[model] primary={IMAGE_MODEL}  fallback={IMAGE_MODEL_FALLBACK}")
-    print(f"[run] {args.brand} / {args.post_id} / {args.format} / {aspect_ratio} / stem={stem_key} / count={args.count} / parallel={args.parallel}")
+    print(f"[gemini] primary={IMAGE_MODEL}  fallback={IMAGE_MODEL_FALLBACK}")
+    if oai_client:
+        print(f"[openai] primary={OPENAI_IMAGE_MODEL}  fallback={OPENAI_IMAGE_MODEL_FALLBACK}")
+    print(f"[run] {args.brand} / {args.post_id} / {args.format} / {aspect_ratio} / stem={stem_key} / count={args.count} / backend={args.backend} / parallel={args.parallel}")
 
     start = time.time()
 
     def worker(job):
-        idx, angle, text = job
-        print(f"[gen {idx:>2}] start — {angle[:60]}...")
-        png, used_model = generate_with_retry(
-            client, text, aspect_ratio, ref_bytes, logo_bytes=logo_bytes,
-        )
+        idx, angle, text, backend = job
+        tag = "G" if backend == "gemini" else "O"
+        print(f"[gen {tag}{idx:>2}] start — {angle[:55]}...")
+        if backend == "gemini":
+            png, used_model = generate_with_retry(
+                gem_client, text, aspect_ratio, ref_bytes, logo_bytes=logo_bytes,
+            )
+        else:
+            png, used_model = generate_with_retry_openai(
+                oai_client, text, aspect_ratio, ref_bytes, logo_bytes=logo_bytes,
+                primary_model=OPENAI_IMAGE_MODEL,
+                fallback_model=OPENAI_IMAGE_MODEL_FALLBACK,
+            )
         if not png:
-            print(f"[gen {idx:>2}] ✗ failed all models")
+            print(f"[gen {tag}{idx:>2}] ✗ failed all models")
             return idx, None
-        out_path = out_dir / f"variation_{idx}.png"
+        # Filename: when mixed backends, tag the file so viewer can tell
+        fname = f"variation_{tag}{idx}.png" if args.backend == "both" else f"variation_{idx}.png"
+        out_path = out_dir / fname
+        # Write raw first
         out_path.write_bytes(png)
-        print(f"[gen {idx:>2}] ✓ {out_path.name} ({len(png)/1024:.0f} KB) via {used_model}")
+        # Aspect-safe center-crop + resize to IG spec.
+        # If source aspect != target aspect, center-crop the long side BEFORE resizing.
+        # NEVER non-proportional stretch — that flattens subjects.
+        try:
+            from PIL import Image
+            ig_sizes = {"4:5": (1080, 1350), "1:1": (1080, 1080), "9:16": (1080, 1920),
+                        "2:3": (1080, 1620), "3:2": (1620, 1080), "16:9": (1920, 1080)}
+            target = ig_sizes.get(aspect_ratio)
+            if target:
+                im = Image.open(out_path).convert("RGB")
+                sw, sh = im.size
+                tw, th = target
+                src_ratio = sw / sh
+                tgt_ratio = tw / th
+                if abs(src_ratio - tgt_ratio) > 0.01:
+                    # Aspect mismatch — crop
+                    if src_ratio > tgt_ratio:
+                        # source too wide → crop width centered
+                        new_w = int(round(sh * tgt_ratio))
+                        left = (sw - new_w) // 2
+                        im = im.crop((left, 0, left + new_w, sh))
+                    else:
+                        # source too tall → crop height TOP-BIASED
+                        # (headlines and logos live in upper region — keep more top,
+                        # sacrifice more bottom). Ratio: 20% off top, 80% off bottom.
+                        new_h = int(round(sw / tgt_ratio))
+                        extra = sh - new_h
+                        top = int(round(extra * 0.2))  # keep top-heavy
+                        im = im.crop((0, top, sw, top + new_h))
+                if im.size != target:
+                    im = im.resize(target, Image.LANCZOS)
+                im.save(out_path, "PNG", optimize=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[gen {tag}{idx:>2}] resize skipped ({type(exc).__name__})")
+        print(f"[gen {tag}{idx:>2}] ✓ {out_path.name} ({out_path.stat().st_size/1024:.0f} KB) via {used_model}")
         return idx, out_path
 
     with cf.ThreadPoolExecutor(max_workers=args.parallel) as executor:
         list(executor.map(worker, jobs))
 
     elapsed = time.time() - start
+
+    # Auto-build review grid
+    try:
+        build_review_grid(out_dir, args.backend)
+        print(f"[grid] {out_dir / '_GRID.jpg'}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[grid] skipped ({type(exc).__name__}: {exc})")
+
     print(f"\nDone in {elapsed:.1f}s. Review: open {out_dir}")
+
+
+def build_review_grid(out_dir: pathlib.Path, backend: str) -> None:
+    """4×2 grid composite with per-cell labels."""
+    from PIL import Image, ImageDraw, ImageFont  # lazy import
+
+    pngs = sorted(out_dir.glob("variation_*.png"))
+    if not pngs:
+        return
+    imgs = [Image.open(p).convert("RGB") for p in pngs]
+    w, h = imgs[0].size
+    scale = 400 / w
+    nw, nh = int(w * scale), int(h * scale)
+    imgs_r = [im.resize((nw, nh)) for im in imgs]
+    cols = 4
+    rows = (len(imgs_r) + cols - 1) // cols
+    grid = Image.new("RGB", (nw * cols, nh * rows), "white")
+    d = ImageDraw.Draw(grid)
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 26)
+    except Exception:
+        font = ImageFont.load_default()
+
+    for i, (im, p) in enumerate(zip(imgs_r, pngs)):
+        r, c = divmod(i, cols)
+        x, y = c * nw, r * nh
+        grid.paste(im, (x, y))
+        # Label = filename minus prefix/suffix
+        label = p.stem.replace("variation_", "V")
+        d.text((x + 8, y + 8), label, fill="yellow",
+               font=font, stroke_width=2, stroke_fill="black")
+
+    grid.save(out_dir / "_GRID.jpg", quality=88)
 
 
 if __name__ == "__main__":

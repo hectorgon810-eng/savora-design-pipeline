@@ -28,5 +28,10 @@ Thumbs.db
 # Generated outputs — keep folder structure via .gitkeep, ignore binary PNGs
 OUTPUT/nano_banana/**/*.png
 OUTPUT/nano_banana/**/*.jpg
+OUTPUT/PICKS/**/*.png
+OUTPUT/PICKS/**/*.jpg
+# Generated review HTMLs regenerate on demand
+OUTPUT/review_*.html
+OUTPUT/test_img.html
 # HTML previews are fine to track if you want version control; currently ignored by default
 OUTPUT/claude_design/**/variation_*.html
