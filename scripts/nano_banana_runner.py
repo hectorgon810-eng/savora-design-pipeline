@@ -103,26 +103,34 @@ OPENAI_IMAGE_MODEL_FALLBACK = os.environ.get("OPENAI_IMAGE_MODEL_FALLBACK", "")
 # ============================================================
 
 BRAND_STEMS = {
-    "azteca_playful": """A social media image for Azteca, a family Mexican restaurant. The register is PLAYFUL-MAXIMALIST FAMILY (La Bamba Ice Cream is the anchor), but with craft discipline — not cheap and not random.
+    "azteca_playful": """A social media image for El Azteca — a family Mexican restaurant with locations in CAMDEN, DOVER, and REHOBOTH, Delaware. The register is PLAYFUL-MAXIMALIST FAMILY with craft discipline. El Azteca is NOT La Bamba. Never reference, name, caption, or visually include La Bamba, La Bamba Ice Cream, or any La Bamba product anywhere on the image. Only use El Azteca branding.
 
-BRAND PALETTE: hot pink #FF5BA7, sunshine yellow #FFD400, turquoise #1FB5B0, chile red #E63946, cream #F8F2DF, cobalt #1A3FA8 (heritage accent). Palette pairings that WORK: pink+red+cream (warm), blue+red (complementary for red-dominant food), pink+cream (soft playful). Palette pairings to AVOID: black+yellow (harsh school-bus), blue+black (flat), mono-saturated flat (cheap). Lean PASTEL-SATURATED rather than flat-saturated — colours feel hand-mixed, paper-stock, poster-printed, not digital Canva.
+BRAND PALETTE (PRIMARIES, 75–85% of every layout): chile red #E63946, agave green / forest green #2F7A3A, cobalt blue #1A3FA8, masa cream #F8F2DF. These four are the brand. Pink #FF5BA7 is a FUN ACCENT ONLY — cap pink at 15% of any single layout, never the ground, never dominant. Sunshine yellow #FFD400 and turquoise #1FB5B0 are RARE ACCENTS only (<10% each). Lean PASTEL-SATURATED not flat-saturated — colors feel hand-mixed, paper-stock, poster-printed, not digital Canva.
 
-TYPOGRAPHY DISCIPLINE: bold chunky display sans-serif (Cooper Black / Sharp Grotesk Ultra / Obviously) + friendly rounded sans body + optional hand-painted brush accent. The LETTERS ARE CLEAN AND READABLE — no grain, no dissolve, no knockout, no distress overlay on the type itself. Texture lives in the BACKGROUND FIELD, never in the letterforms. Headlines are crisp. Body reads without effort. Address / award / tiny bottom copy is at least 18–20pt equivalent — NEVER micro-decorative-print.
+PALETTE PAIRINGS THAT WORK: red + cream + green (Mexican flag warmth), blue + red + cream (complementary for red-dominant dishes), green + cream + red accents, cream + red + small cobalt corner. PAIRINGS TO AVOID: black + yellow, blue + black, any pink-dominant ground, mono-saturated flat anything.
 
-HAND-DRAWN ARROW RULE (critical — La Bamba signature executed correctly):
-  Every hand-drawn marker arrow MUST originate from a short ingredient label (2–4 words: "camarón", "salsa azteca", "aguacate") and TERMINATE at the visible location of that specific ingredient in the food photograph. Before drawing an arrow, name the ingredient + trace the line to the exact pixel location of that ingredient in the supplied photo. Arrows pointing at random sauce pools, empty space, the glass rim, or generic decoration are WRONG. Three to five semantic arrows max — fewer is more. Arrow weight is 2–3px marker, slight hand-wobble, not vector-perfect.
+TYPOGRAPHY DISCIPLINE: the typography should match the weight and spirit of the El Azteca warrior logo wordmark — bold chunky display sans (Cooper Black / Sharp Grotesk Ultra / Obviously) at headline weight the SAME weight family as the logo's lettering. Friendly rounded sans body. Optional hand-painted brush accent word. Letters STAY CLEAN — no grain, no dissolve, no distress on the type. Texture lives in the BACKGROUND, never on letterforms. Headlines crisp. Address / award / bottom copy ≥18–20pt equivalent — never micro-print.
 
-PHOTO-TO-FIELD TRANSITION: where a brand colour field meets the edge of the food photograph, use a 60–120px soft gradient dissolve (the field colour fading to transparent into the photo edge), NOT a hard knife-edge. No diagonal slashes or horizontal colour bands that CUT THROUGH the food photograph. Colour fields sit ADJACENT to the photo or EXTEND FROM one edge outward, never bisect the plate.
+HAND-DRAWN ARROW RULE (critical — semantic-accuracy enforced, default is ZERO arrows):
+  Arrows are RARE and only used for SMALL DETAIL callouts the viewer might miss. DEFAULT = zero arrows on almost all posts.
+  BANNED arrow targets (never label these — they are obvious and labeling them looks patronizing): meat / steak / chicken / fish fillet / rice / beans / tortilla / bread / cheese / lettuce / sauce pool / egg / pasta / fries. These are already visually obvious; arrows on them look wrong.
+  ALLOWED arrow targets (only when specifically separable + visible): a hidden or easy-to-miss GARNISH (specific herb name, specific chile variety, pickled item), a specific CHEESE type the customer wouldn't guess (cotija vs feta), a specific SAUCE / CRUDITÉ the dish builds around (salsa macha, chicharrón, etc). Only add an arrow if the label adds REAL INFORMATION the viewer didn't know. If in doubt, zero arrows.
+  Conditions when used: (1) label names an ingredient visible at a specific pixel location, (2) arrow tip terminates exactly on that ingredient, (3) no label is generic / duplicative with what the photo obviously shows. Two arrows max when used. Arrow weight 2–3px marker, slight hand-wobble. Never invent ingredients.
 
-TEXTURE: halftone dots at 45° on backgrounds OK. Subtle risograph misregistration OK. Slight off-axis rotation of stickered elements OK. But texture stays OUT of the type. Use less texture overall — family restaurant warmth, not zine-overload.
+LOGO RULE (NON-NEGOTIABLE — LOGO IDENTITY LOCK):
+  The supplied El Azteca warrior logo is a specific, approved wordmark. Use it VERBATIM. Do NOT redraw it, do NOT re-illustrate it, do NOT restyle it, do NOT generate an alternate warrior. Do NOT combine it with other design elements inside the logo itself. If the supplied logo is attached as a reference image, composite it at 80–120px in ONE corner as-is. If no logo is attached, skip the logo entirely — do not invent one. Any output where the model draws its own version of the warrior or inserts a mocked-up "El Azteca" lockup is REJECTED.
 
-NO DROP SHADOWS on Azteca layouts — this register is flat-layered playful-maximalist graphic, not dimensional. The layering of coloured fields + halftone + arrows IS the dimension.
+PHOTO-TO-FIELD TRANSITION: 60–120px soft gradient dissolve where color field meets photo edge — never a hard knife-edge. No diagonal slashes or horizontal bands that CUT THROUGH the food photo.
 
-LOGO: real Azteca warrior logo (supplied as second reference) placed at 80–120px in a corner, full colour, as-is.
+TEXTURE: halftone dots at 45° on backgrounds OK. Subtle risograph misregistration OK. Slight off-axis rotation of stickered elements OK. Family-restaurant warmth, not zine-overload.
 
-Photography style: daylight-bright, slightly oversaturated, warm Portra 400 film grain ON THE PHOTO ONLY (not added on top of design). Hand-made, family, warm, bilingual Spanish-primary.
+NO DROP SHADOWS. Flat-layered playful-maximalist graphic. Dimension from layered fields + halftone + arrows.
 
-VOICE SEED (Azteca-only — do not reuse across other brands): family-warm, bilingual Spanish-primary, celebration energy. Voice examples from the AZ feed: "Guacamole, but make it octopus." · "Not your average appetizer." · "We don't do things halfway." · "Pick your poison." · "Cocktail hour." · "Classic for a reason." Voice is celebratory-familiar, never ironic-detached. When writing COPY OPTION (c), ANALYZE THE SPECIFIC DISH (its ingredients, its regional origin, its role in a Mexican family meal) and write a 2–3 candidate lines drawn from THIS voice and THIS plate. Do NOT use smart-mouth punchlines ("You already know") — that's Jackson House voice, wrong brand. Spanish phrase OK if it fits ("De la casa", "¡Con gusto!", "Auténtico").
+Photography style: daylight-bright, slightly oversaturated, warm Portra 400 film grain ON THE PHOTO ONLY. Hand-made, family, warm, bilingual Spanish-primary acceptable.
+
+VOICE SEED (El Azteca-only): family-warm, bilingual Spanish-primary OK, celebration energy. Voice examples from the AZ feed: "Guacamole, but make it octopus." · "Not your average appetizer." · "We don't do things halfway." · "Pick your poison." · "Cocktail hour." · "Classic for a reason." Voice is celebratory-familiar, never ironic-detached, never smart-mouth (that's Jackson House). Spanish phrases OK when they fit ("De la casa", "¡Con gusto!", "Auténtico"). NEVER reference La Bamba in voice.
+
+LOCATIONS FOR ADDRESS/FOOTER: "Camden · Dover · Rehoboth" or equivalent. Never use generic "Delaware · Rehoboth" — the three specific city names are the brand's geographic identity.
 
 HAND-DRAWN ACCENT (Azteca — OPTIONAL, sparing): AZ already carries hand-drawn arrows as its signature (see arrow rule above). BEYOND arrows, zero or one additional ornament per layout is allowed from the AZ-world library: chile silhouette, corn cob outline, tortilla-press mark, skull/Day-of-Dead hairline, warrior-shield mini-mark, hand-drawn star-burst, sun-ray hairline, lime-wedge cross-section. NEVER agave (BM). NEVER wheat/butter/flame (JH). Do not stack ornaments AND arrows heavily — if arrows are present, ornament budget is zero unless clearly additive.""",
 
@@ -170,25 +178,123 @@ HAND-DRAWN ACCENT (Blue Mezcal — OPTIONAL, not every post): Zero or one hand-d
 COPY PERSONALITY RULE (critical — NOT every post leads with the dish/drink name):
 When option (b) or (c) is used, the subject name can drop to small-caps subhead size or disappear entirely — the photo carries identification. Default: mix across a variation set.
 
-VOICE SEED (Blue Mezcal-only — do not reuse across other brands): editorial-modernist, bilingual accent-only, mezcal-reverent, moody-refined. Voice examples from the BM feed and brand profile: "Smoke, citrus, slow." · "Cool and dangerous." · "Some things don't need to be complicated." · "Para todo mal, mezcal; para todo bien, también." Voice is literary + restrained, NOT smart-mouth punchy (that's JH) and NOT celebration-warm (that's AZ). Poetic mood-lines, agave-culture references, bartender-confident statements. When writing COPY OPTION (c), ANALYZE THE SPECIFIC DRINK (its spirit base, technique, garnish, feeling on the palate) and write 2–3 candidate lines drawn from THIS BM voice and THIS drink. Spanish dicho OK when earned. Do NOT borrow example lines from other brands.
+VOICE SEED (Blue Mezcal-only — do not reuse across other brands): editorial-modernist, ENGLISH ONLY (no Spanish — that's Azteca territory), mezcal-reverent, bartender-confident, social-bold. Voice examples: "Smoke, citrus, slow." · "Cool and dangerous." · "One more. You'll survive." · "Impossible to have one." · "Another round?" · "A handshake in a glass." Voice is literary + confident + social, NOT smart-mouth punchy (that's JH) and NOT celebration-warm (that's AZ). Poetic mood-lines, agave-culture references, bartender-confident statements — ALL IN ENGLISH. Never render Spanish phrases on BM posts. When writing COPY OPTION (c), ANALYZE THE SPECIFIC DRINK (spirit base, technique, garnish, feeling on the palate) and write 2–3 candidate lines drawn from THIS BM voice and THIS drink.
 
 TEXTURE: fine noise grain 3–5% on every flat field, subtle handmade paper grain, Portra 400 film grain on photography (daylight-bright, not dark-nocturnal). NO neon, NO velvet burgundy, NO brass foil (that's the nocturnal register).
 
 Photography style: bright editorial daylight 5200K OR soft tungsten 3000K — the drink/dish glows, amber bokeh in the background is fine, but the overall mood is WARM AND INVITING, not dark-moody. 45–60% fill band — editorial restraint with energy.""",
 
-    "blue_mezcal_nocturnal": """A social media image for Blue Mezcal, nocturnal after-dark register — insider mezcal bar at 11pm. The aesthetic target is a foil-stamped cocktail menu at a high-end agave den: Casa Azul NYC after-hours, Leyenda, Ghost Donkey. Editorial moody-nocturnal restraint, NOT nightclub neon.
+    "blue_mezcal_nocturnal": """A social media image for Blue Mezcal, nocturnal after-dark register — insider mezcal bar at 11pm. Reference anchors: Casa Azul NYC after-hours, Leyenda, Ghost Donkey — BUT rendered in Blue Mezcal's OWN palette. Deep-blue editorial restraint, NOT nightclub neon, NOT black+gold steakhouse. Blue Mezcal nocturnal stays BLUE.
 
-PRIMARY GROUND: deep charred black #0B0B0B transitioning to velvet burgundy #4A1621 or smoke gray #2A2825 as a subtle tonal gradient (5–10% shift, darker toward one corner) — NEVER a flat fill. Deep blacks with rich shadow falloff.
+PRIMARY GROUND: deep midnight cobalt #14213D transitioning to near-black cobalt #0A1328 as a subtle tonal gradient (5–10% shift, darker toward one corner) — NEVER a flat fill. Deep blue shadow falloff. Charred black #0B0B0B may be a minor corner accent only (<10%); it is NOT the primary ground. The post must read BLUE at first glance, not black.
 
-PRIMARY TYPE TREATMENT: METALLIC BRASS GRADIENT FOIL on headlines — brass #C9A24B → antique gold #B08937 → brass #C9A24B as a soft 3-stop gradient reading like foil-stamp highlight catching candlelight. Add a specular hotspot and a 1px deeper-shade inner edge so type reads as actual foil on paper, not flat gold. Secondary type in warm white #EDE4D3 or antique brass.
+PRIMARY TYPE TREATMENT: METALLIC BLUE GRADIENT FOIL on headlines — bright cobalt #1E3A8A → deep sapphire #0E2A7A → bright cobalt #1E3A8A as a soft 3-stop gradient reading like embossed foil on cocktail-menu cardstock. Add a specular highlight and a 1px deeper-shade inner edge so type reads as actual metallic foil, not flat blue. Secondary type in warm tan #E8DBB8 or warm cream #F2EADF.
 
-BRAND PALETTE: charred black #0B0B0B / smoke gray #2A2825 ground. Brass #C9A24B metallic foil as hero type. Velvet burgundy #4A1621 used as a DEEP TONAL GRADIENT field (darker at the bottom corners, approaching near-black — never flat burgundy). Warm white #EDE4D3 for body type and hairline rules. Agave green #4E6B3A as rare sub-accent only (<5%). NO cobalt blue in nocturnal register — cobalt is editorial-register only.
+BRAND PALETTE (nocturnal): midnight cobalt #14213D ground dominant. Metallic blue foil #1E3A8A for hero type. Velvet burgundy #4A1621 used as a DEEP TONAL GRADIENT SUB-FIELD at one corner only (darker toward the corner, fading to near-ground) — burgundy is an ACCENT, never dominant, cap at 15%. Warm tan #E8DBB8 for body type and hairline rules. Bone cream #F3ECD8 for supporting accents. NO brass foil. NO metallic gold. NO black-dominant grounds. The nocturnal register = DEEP BLUE with burgundy + tan accents.
 
-TYPOGRAPHY: refined editorial serif italic (Bodoni / Canela / Didot feel) rendered AS metallic brass foil for hero, paired with small-caps grotesque labels in warm white. Hairline brass rules separating sections. Tight tracking on italics.
+TYPOGRAPHY: refined editorial serif italic (Bodoni / Canela / Didot feel) rendered AS metallic blue foil for hero, paired with small-caps grotesque labels in warm tan or warm cream. Hairline blue or tan rules separating sections. Tight tracking on italics.
 
-TEXTURE: fine noise grain 5–8% overlay on every field; subtle paper-grain impression UNDER the brass-foil type (as if foil stamped on textured menu cardstock); 35mm Portra 800 film-grain emulation on all photography; faint edge vignette pulling focus inward. Velvet surfaces, rich shadow falloff. NO rustic cream paper, NO neon, NO flat gold.
+TEXTURE: fine noise grain 5–8% overlay on every field; subtle paper-grain impression UNDER the metallic-blue-foil type (as if foil stamped on textured menu cardstock); 35mm Portra 800 film-grain emulation on all photography; faint edge vignette pulling focus inward.
 
-Photography style: moody low-light, tungsten 2700K, single rim light from upper-right at 45°, deep blacks, the drink/dish glows while the surroundings fall away. 40–50% fill band — confident restraint.""",
+Photography style: moody low-light, tungsten 2700K, single rim light from upper-right at 45°, deep blues, the drink/dish glows while the surroundings fall away into cobalt shadow. 40–50% fill band — confident restraint.""",
+
+    "savora_studio": """A social media image for SAVORA — a restaurant-focused creative studio / MEDIA PRODUCTION AGENCY based in Middletown, Delaware. Savora is NOT a restaurant and NOT an aspirational lifestyle brand. Savora is a PHOTOGRAPHY, VIDEO, AND BRAND-SYSTEMS studio that sells its expertise to restaurant operators. Every post is a PHOTOGRAPHY-MONOGRAPH entry demonstrating craft — not a dish ad. The client's food in the reference photo is the PROOF OF WORK. The graphic must read "this was directed, lit, framed, and produced by a studio that knows what it's doing" — not "this looks tasty, come eat it."
+
+VISUAL REGISTER (NON-NEGOTIABLE — matches savoramarketing.com CSS):
+Dark luxury photography monograph. Reference anchors: Aesop product catalogue, Bottega Veneta editorial, Frenchette menu back cover, Blackbird Spyplane photo essay, the inside cover of a monograph book from Aperture or Phaidon. Matte-black ground with deep-teal elevated surfaces. Metallic gradient accents (orange foil, gold foil, teal foil) used as RARE typographic emphasis — like embossed foil-stamp on a dark menu card. Warm off-white type floating over the dark field. Never cream-flat-Kinfolk (that was v1, rejected). Never bright-agency-portfolio. Never Instagram-meme.
+
+BRAND PALETTE (site-matched — NON-NEGOTIABLE):
+GROUNDS (pick ONE per post, always with 8-14% tonal gradient — never flat fill):
+- NEAR-BLACK #00060B — primary ground, 60-80% dominance (reads dark with a teal undertone)
+- BACKGROUND-DEEP #010908 — darker edge for tonal gradients
+- ELEVATED DEEP TEAL #062423 — elevated surface for type blocks / metric-card grounds (secondary ground option)
+
+TYPE INK ON DARK GROUNDS:
+- WARM OFF-WHITE #D9D4CE — primary body/label ink
+- BRIGHT WARM #F2EFEB — hero-headline ink where foil is not used
+- MUTED TEAL #7B9693 — secondary support ink for small-caps labels
+
+METALLIC GRADIENTS (RARE ACCENTS — used as foil-stamp on hero type or small seals, NEVER flat fills, NEVER entire fields):
+- METALLIC ORANGE FOIL: #F2B480 → #C2612C → #7A3A13 (3-stop gradient reading as embossed copper-foil on matte black cardstock — specular highlight + 1px darker inner edge). PRIMARY ACCENT. Used for hero headlines on ~35% of posts.
+- METALLIC GOLD FOIL: #F7DA7F → #E0B045 → #8A621A (3-stop gradient reading as brushed brass). SECONDARY ACCENT. Used for Savora seal + occasional masthead word.
+- METALLIC TEAL FOIL: #2B8C83 → #145A55 → #073733 (3-stop gradient reading as patinated copper-teal). TERTIARY ACCENT. Used for hairline rules, small borders, rare kicker words.
+
+DOMINANCE RULE: dark ground 65-80%, off-white type 12-18%, metallic foil accent capped at 10% of canvas (never more than one hero-foil lockup per post). Every post must read DARK-AND-METALLIC at first glance, not cream-and-teal.
+
+Every Savora post must pass the one-second test: a viewer scrolling past sees "dark luxury photography studio" in one second based on ground + metallic accent + warm-off-white type + Gambarino-feel serif. If the post reads restaurant-brand, Monocle-flat, or agency-bright — REJECT.
+
+TYPOGRAPHY (monograph register):
+- HERO DISPLAY: Gambarino (primary — condensed luxury serif with Didone-inflected contrast) OR Fraunces (acceptable fallback — opsz 72+ for display, italic for mood, roman caps for authority). TIGHT tracking. Either rendered as WARM OFF-WHITE on dark ground OR as METALLIC ORANGE FOIL gradient (3-stop, specular) on dark ground. Foil is used ONCE per post max.
+- SANS LABELS & SMALL-CAPS: Geist (primary) OR Outfit / Söhne — wide-tracked (0.22–0.28em) small-caps for kickers, credits, addresses, window-labels. Warm off-white or muted teal. 13–22pt equivalent.
+- MONO (metric numerals ONLY): JetBrains Mono / Geist Mono bold — tabular numerals, warm off-white or metallic-orange-foil gradient. Never body copy.
+
+VOICE (THE CRITICAL PIVOT — PHOTOGRAPHY-CRAFT REGISTER, NOT DISH-SALES):
+Savora's voice on its own feed documents THE WORK of making the image — not the dish in the image. Headlines name LIGHT, LENS, TIME-OF-DAY, FRAME-COUNT, COMPOSITION DECISIONS, CLIENT BRIEF, or the PHOTOGRAPHIC MOMENT. They do NOT name flavor, ingredients, or dish mood. The restaurant brand already owns dish-voice; Savora owns craft-voice.
+
+ALLOWED (photography-craft register) — headline EXAMPLES for calibration:
+- "Tungsten at 2800K. One rim light. Portra 800 push."
+- "Window-soft at 3:47pm. Twelve minutes of light."
+- "Eighty-five at f/2.8. Shutter dropped for the char."
+- "Overhead. Five inches above the rim. Steam caught on the second take."
+- "Single bounce card camera-right. The rest is the chef."
+- "Close-crop on the garnish. Backed off the plate."
+- "Shot for Blue Mezcal. Twenty-eight frames. This one earned its place."
+- "Forty minutes to set the key. Four seconds to shoot it."
+- "Available light. Chosen frame."
+- "Pre-pro Tuesday. Shot Thursday. Delivered Friday."
+- "Portra 400. Pushed one stop. Warm tungsten through a single north window."
+- "Restraint carried the image."
+- "Twelve setups. One kept."
+
+FORBIDDEN VOICE (automatic reject — this is the v1 mistake):
+- ANY dish-descriptor language: "Bourbon. Smoke. A handshake.", "Cool and dangerous.", "Cream inside, good bread beside.", "Hot. Honest. House-made.", "Classic for a reason.", "Grilled. Charred. De la casa." — these are RESTAURANT-BRAND voice, not Savora voice. If a line could belong on the restaurant's own feed, it fails Savora's review.
+- ANY flavor / ingredient / mood line about the food itself (that's the client's job)
+- Agency-speak: "elevate your brand", "next-level", "stand out", "results-driven", "innovative"
+- Emoji chains, hype punctuation, fake urgency
+- Comparisons to other studios
+- Pitch-deck adjectives
+
+CREDIT RULE (mandatory on every hero-portfolio post): "SHOT FOR [CLIENT NAME]" rendered as small-caps Geist tracked wide 0.22em in muted teal #7B9693 or warm off-white #D9D4CE, typographic only, never the client's logo. Subhead size (14–20pt equivalent). Sits near the Savora signature, often in a footer strip or sidebar.
+
+FORBIDDEN VISUAL (automatic reject):
+- Cream/ivory/bone grounds dominant (that was v1 — rejected; Savora is DARK)
+- Flat-Kinfolk editorial (Monocle cream register — rejected)
+- Neon / cyberpunk / 80s gradients
+- Drop shadows on type (except 1px dark drop for legibility over photo)
+- Canva-stock illustrations or Unsplash stock
+- Agency grid-of-screenshots portfolio layouts
+- Any cinematic teal-and-orange GRADING applied to the reference photo (teal and orange are TYPE/INK colors, not photographic grade — the client photo stays color-accurate)
+- Any visual that reads Instagram-meme before photography-monograph
+
+COMPOSITION DEFAULTS:
+- 55-65% negative space on type-first layouts. Dark restraint.
+- Full-bleed client photography allowed WHEN the photo carries it. When full-bleed, type sits in a dark-gradient strip (top, bottom, or side band) with warm off-white type or metallic foil headline.
+- Hairline metallic-teal rules (1px, 40-60% opacity gradient) separate sections — replacing flat-teal hairlines.
+- Small-caps Geist tracked-wide kicker sits above headlines as a magazine dept-label.
+- Metric cards: HUGE mono numeral + warm-off-white unit label + context + window + caveat. Dark ground. Metallic-orange-foil only on numeral optionally.
+
+PHOTOGRAPHY POSTURE: reference photo is Savora-shot client work. Portra 400/800 grain stays ON THE PHOTO, never on type. Warm tungsten or editorial daylight. The photo enters the composition UNTOUCHED, pixel-accurate — never regenerated, restyled, or color-shifted to fit the dark ground. The photo is a JEWEL on a matte-black jewelry-display card — the dark ground serves the photo, not the other way around.
+
+SAVORA SEAL (OPTIONAL, once per post max): small circular METALLIC-GOLD-FOIL hairline mark, 72–96px diameter, reading "SAVORA" small-caps tracked on the ring OR "SAV / ORA" two-line center, sitting bottom-right or bottom-left. If the composited Savora PNG is attached at 80-120px, skip the drawn seal — don't double up.
+
+HAND-DRAWN ACCENT (DEFAULT ZERO): Savora carries no illustrated ornaments. The photograph + dark editorial grid + metallic foil do the work. If absolutely needed for a manifesto post, the only allowed mark is a single metallic-teal hairline rule at 40% width or a small metallic-gold seal outline. NEVER agave / warrior / wheat / chile (client brands).
+
+CROSS-BRAND ISOLATION (Savora is the PARENT):
+- Savora's wordmark "SAVORA" is the only brand rendered as display type
+- Client names appear ONLY as small-caps typographic credits — never client logos
+- Do NOT adopt client palettes (cobalt-cream for BM, black-brass for JH, chile-red for AZ). Savora stays DARK-TEAL-AND-METALLIC regardless of whose photo is featured.
+
+LOGO RULE: supplied SAVORA logo PNG is the only logo composited. 80-120px bottom-center or bottom-left. Never redraw. If no PNG attached, small typographic "SAVORA" wordmark in Gambarino/Fraunces italic 32-44pt, warm off-white at 60-70% opacity, is acceptable as text signature.
+
+LOCATIONS FOR ADDRESS/FOOTER: "Middletown · Delaware — Restaurant Studio" OR "Savora · savoramarketing.com · DE" — rendered small-caps Geist tracked wide 0.22em in muted teal #7B9693 or warm off-white #D9D4CE at 12-14pt equivalent.
+
+PHOTO-TO-FIELD TRANSITION: soft 40-80px gradient dissolve from full-bleed photo edge into dark ground (never a hard knife-edge). No diagonal slashes. No Canva wedges.
+
+TEXTURE:
+- 5-8% fine noise grain on dark grounds (film-emulsion impression)
+- Subtle paper-grain UNDER metallic-foil type (as if foil-stamped on dark linen cardstock)
+- Portra 400/800 grain on photography only
+- NO halftone dots (Azteca), NO brass foil on WARM-CREAM ground (Jackson House), NO cobalt-blue fields (Blue Mezcal). Savora's foil register is ORANGE + GOLD + TEAL metallic on DARK.""",
 
     "jackson_house_tavern": """A social media image for Jackson House — a higher-end American tavern (Delaware Today 2025 Best New Restaurant). The register is PREMIUM-HERITAGE: cocktail-menu elegance balanced against comfort-food warmth. Think foil-stamped cocktail menu or a Gage & Tollner / Frenchette editorial — NOT rustic farm-table cream paper.
 
@@ -215,7 +321,7 @@ BRAND_META = {
     "azteca": {
         "default_stem": "azteca_playful",
         "alt_stems": ["azteca_heritage"],
-        "address_line": "Delaware · Rehoboth — Find your nearest location · link in bio",
+        "address_line": "Camden · Dover · Rehoboth — link in bio",
         "wordmark": "EL AZTECA",
         "bilingual": "heavy",
         "logo_file": "el_azteca.png",
@@ -239,6 +345,15 @@ BRAND_META = {
         "logo_file": "jackson_house.png",
         # Every JH post includes a subtle mention of the award per Hector (2026-04-21)
         "award_badge": "Best New Restaurant · Delaware Today 2025",
+    },
+    "savora": {
+        "default_stem": "savora_studio",
+        "alt_stems": [],
+        "address_line": "Middletown · Delaware — Restaurant Studio · savoramarketing.com",
+        "wordmark": "SAVORA",
+        "bilingual": "none",
+        "logo_file": "savora.png",
+        "award_badge": None,
     },
 }
 
@@ -399,6 +514,22 @@ def build_scene_paragraph(
         "typography, colour fields, motifs, and textures."
     )
 
+    negative_content_lock = (
+        "NEGATIVE-CONTENT LIST (NON-NEGOTIABLE — REJECT IF ANY APPEAR ON CANVAS):\n"
+        "  Never render these words, phrases, or visual references anywhere on the image,\n"
+        "  regardless of brand or content type:\n"
+        "    - 'La Bamba' / 'La Bamba Ice Cream' — different brand, never on El Azteca posts\n"
+        "    - 'Cumbia Night' / 'live music' — unverified events, do not invent\n"
+        "    - 'Altar Menu' / 'Ofrenda Menu' / 'Menu Especial' — unverified seasonal menus\n"
+        "    - 'Five Course' / 'Prix Fixe' / '28-day Residency' — do not invent event details\n"
+        "    - 'Blue Mezcal Quarterly' / any fake magazine or publication title\n"
+        "    - 'Chef's Tasting' / 'Chef's Table' unless supplied as real support copy\n"
+        "    - Any named staff ('Selena', 'Marco', 'Elena', 'the House') on any brand other\n"
+        "      than the one where that person actually works\n"
+        "    - Any phone number, website URL, social handle, or price not supplied\n"
+        "  If a layout feels empty without such copy, REDUCE copy rather than invent.\n\n"
+    )
+
     factual_integrity_lock = (
         "FACTUAL-INTEGRITY RULE (NON-NEGOTIABLE — HIGHEST PRIORITY):\n"
         "  This is real restaurant marketing for real clients. Every word rendered on the image\n"
@@ -459,16 +590,25 @@ def build_scene_paragraph(
     )
 
     logo_instruction = (
-        "LOGO RULE (use supplied logo image as-is):\n"
-        "  A second reference image is attached — the brand's ACTUAL logo. Place this logo "
-        "  exactly as supplied at roughly 80–120px tall (about 7–10% of canvas width) in ONE "
-        "  of these positions: bottom-center, bottom-left, bottom-right, or top-right. "
-        "  DO NOT redraw, re-letter, stylize, recolour, or regenerate the logo — composite "
-        "  the supplied PNG verbatim. Do not add an additional wordmark text elsewhere; the "
-        "  logo IS the wordmark for this design.\n\n"
+        "LOGO IDENTITY LOCK (NON-NEGOTIABLE — HIGHEST PRIORITY):\n"
+        "  A second reference image is attached — the brand's REAL, APPROVED logo.\n"
+        "  You MUST composite the supplied logo PNG VERBATIM at 80–120px tall (~7–10% of\n"
+        "  canvas width) in ONE corner: bottom-center, bottom-left, bottom-right, or top-right.\n"
+        "\n"
+        "  YOU MUST NOT:\n"
+        "    - redraw, re-letter, re-illustrate, restyle, or recolour the logo\n"
+        "    - invent an alternate version of the warrior / wordmark / brand mark\n"
+        "    - combine the logo with other elements inside the logo itself\n"
+        "    - generate a 'stylized' or 'custom' version of the logo\n"
+        "    - render the brand name as display type anywhere outside the composited logo\n"
+        "    - render a faux logo badge, crest, seal, or lockup containing the brand name\n"
+        "\n"
+        "  The brand name may appear ONLY inside the composited real-logo PNG. All other\n"
+        "  typography on the canvas is headline, subhead, or support copy — never a recreation\n"
+        "  of the brand logo. Any output that redraws the logo is REJECTED.\n\n"
         if has_logo
-        else "WORDMARK: small wordmark-text in one corner (40–80px equivalent, 50–70% "
-        f"opacity): \"{wordmark}\"\n\n"
+        else "NO LOGO ATTACHED: skip the brand-mark entirely. DO NOT invent or generate a logo.\n"
+        f"Small text-only wordmark acceptable at 40–80px, 50–70% opacity: \"{wordmark}\"\n\n"
     )
 
     award_instruction = (
@@ -518,6 +658,7 @@ def build_scene_paragraph(
         f"  CUTS THROUGH the primary photo region are forbidden. Color fields sit adjacent to the\n"
         f"  photo, extend from one edge inward, or occupy a corner — they never bisect the dish or\n"
         f"  glass. If the chosen variation angle creates a slash through the hero, reshape it.\n\n"
+        f"{negative_content_lock}"
         f"{factual_integrity_lock}"
         f"{real_image_lock}"
         f"LUXURY-TEXTURE RULE (non-negotiable):\n"
@@ -844,6 +985,27 @@ def main() -> None:
                 im.save(out_path, "PNG", optimize=True)
         except Exception as exc:  # noqa: BLE001
             print(f"[gen {tag}{idx:>2}] resize skipped ({type(exc).__name__})")
+
+        # POST-GEN LOGO COMPOSITE — guarantees real logo is on every post,
+        # regardless of what the model drew. Covers any model-redrawn logo.
+        try:
+            if logo_path and logo_path.exists():
+                from PIL import Image
+                final = Image.open(out_path).convert("RGBA")
+                logo = Image.open(logo_path).convert("RGBA")
+                fw, fh = final.size
+                # Logo sized to ~10% of canvas width
+                lw = int(fw * 0.11)
+                ratio = lw / logo.width
+                lh = int(logo.height * ratio)
+                logo = logo.resize((lw, lh), Image.LANCZOS)
+                # Position: bottom-right with 28px margin
+                mx, my = 28, 28
+                pos = (fw - lw - mx, fh - lh - my)
+                final.alpha_composite(logo, dest=pos)
+                final.convert("RGB").save(out_path, "PNG", optimize=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[gen {tag}{idx:>2}] logo composite skipped ({type(exc).__name__}: {exc})")
         print(f"[gen {tag}{idx:>2}] ✓ {out_path.name} ({out_path.stat().st_size/1024:.0f} KB) via {used_model}")
         return idx, out_path
 

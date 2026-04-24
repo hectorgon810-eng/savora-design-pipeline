@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feed · Jackson House</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-hero: 'Playfair Display', serif;
+  --font-ui: 'Outfit', sans-serif;
+  --ink: #F2EADF;
+  --ground: #0C0B0A;
+  --accent: #C9A24B;
+  --muted: #7a6e55;
+  --hairline: rgba(201, 162, 75, 0.22);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100dvh; background: var(--ground); color: var(--ink); font-family: var(--font-ui); overflow: hidden; }
+body { display: flex; flex-direction: column; }
+
+header {
+  padding: 14px 22px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 20px;
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in oklab, var(--ground) 94%, transparent);
+  z-index: 10;
+}
+header .wordmark { font-family: var(--font-hero); font-style: italic; font-size: 24px; color: var(--ink); letter-spacing: -0.01em; }
+header .wordmark em { font-style: normal; font-weight: 600; }
+header .kicker { font-size: 10px; color: var(--muted); letter-spacing: 0.22em; text-transform: uppercase; margin-top: 4px; }
+header .stats { display: flex; gap: 14px; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+header .stats b { color: var(--ink); font-weight: 600; margin-left: 4px; font-variant-numeric: tabular-nums; }
+
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  overflow: hidden;
+  min-height: 0;
+  height: calc(100dvh - 140px); /* explicit bound so feed-wrap definitely scrolls */
+}
+
+.pane {
+  background: color-mix(in oklab, var(--ground) 94%, #000 2%);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 14px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: 0;  /* flex overflow fix — without this, children don't scroll */
+}
+.pane h3 { font-family: var(--font-hero); font-style: italic; font-weight: 400; font-size: 18px; color: var(--ink); }
+.pane .meta { font-size: 10px; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; }
+
+/* Pool (left) */
+.pool-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.pool-tabs button {
+  flex: 1; background: transparent; border: 1px solid var(--hairline);
+  color: var(--muted); padding: 6px 10px; font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; border-radius: 4px;
+  cursor: pointer; font-family: var(--font-ui);
+  transition: all 0.15s var(--ease);
+}
+.pool-tabs button.active { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.pool { overflow-y: auto; padding-right: 4px; flex: 1; min-height: 0; max-height: calc(100dvh - 300px); }
+.pool-card {
+  background: var(--ground); border: 1px solid var(--hairline);
+  border-radius: 6px; margin-bottom: 8px; padding: 6px;
+  cursor: grab; transition: transform 0.15s var(--ease), border-color 0.15s var(--ease);
+  display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: center;
+}
+.pool-card:hover { transform: translateX(2px); border-color: var(--accent); }
+.pool-card img { width: 56px; height: 70px; object-fit: cover; border-radius: 3px; background: #eee; }
+.pool-card .info { overflow: hidden; }
+.pool-card .caption { font-size: 11px; color: var(--ink); font-weight: 500; line-height: 1.3; max-height: 2.6em; overflow: hidden; }
+.pool-card .tag { font-size: 9px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
+
+/* Feed (center) */
+.feed-wrap { overflow-y: scroll; overflow-x: hidden; padding: 4px; flex: 1; min-height: 0; scrollbar-width: auto; max-height: calc(100dvh - 230px); }
+.feed-wrap::-webkit-scrollbar { width: 12px; }
+.feed-wrap::-webkit-scrollbar-track { background: color-mix(in oklab, var(--ground) 80%, #000 4%); border-radius: 6px; }
+.feed-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+.feed-wrap::-webkit-scrollbar-thumb:hover { border-width: 1px; }
+.pool::-webkit-scrollbar { width: 10px; }
+.pool::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 5px; opacity: 0.5; }
+.pool::-webkit-scrollbar-track { background: transparent; }
+.feed {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 3px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.slot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: color-mix(in oklab, var(--ground) 80%, #000 4%);
+  border: 2px solid transparent;
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), transform 0.15s var(--ease);
+}
+.slot:hover { z-index: 3; transform: scale(1.04); }
+.slot img { width: 100%; height: 100%; object-fit: cover; display: block; background: color-mix(in oklab, var(--ground) 70%, #000 10%); }
+.slot.empty { background: repeating-linear-gradient(45deg, color-mix(in oklab, var(--ground) 85%, #000 3%), color-mix(in oklab, var(--ground) 85%, #000 3%) 6px, color-mix(in oklab, var(--ground) 80%, #000 5%) 6px, color-mix(in oklab, var(--ground) 80%, #000 5%) 12px); border-color: var(--hairline); }
+.slot.empty::after { content: "drop"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; }
+.slot .date-badge {
+  position: absolute; top: 4px; left: 4px; padding: 2px 6px;
+  background: rgba(0,0,0,0.78); color: #fff;
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  border-radius: 3px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.slot .source-badge {
+  position: absolute; top: 4px; right: 4px; padding: 2px 6px;
+  background: var(--accent); color: var(--ground);
+  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+  border-radius: 3px; font-weight: 700;
+}
+.slot.status-accepted { border-color: #4caf50; }
+.slot.status-rejected { border-color: #e77e7e; opacity: 0.55; }
+.slot.status-pending { border-color: color-mix(in oklab, var(--accent) 65%, transparent); }
+.slot.carousel::before {
+  content: "⎘"; position: absolute; bottom: 4px; right: 4px;
+  background: var(--ink); color: var(--ground);
+  width: 18px; height: 18px; border-radius: 50%;
+  font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700;
+  z-index: 2;
+}
+.slot.drag-over { border-color: var(--accent); transform: scale(1.06); }
+
+footer {
+  padding: 10px 18px; border-top: 1px solid var(--hairline);
+  display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+  background: color-mix(in oklab, var(--ground) 94%, transparent);
+}
+button.action {
+  background: transparent; border: 1px solid var(--hairline); color: var(--ink);
+  padding: 9px 18px; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  border-radius: 999px; cursor: pointer; font-family: var(--font-ui);
+  transition: all 0.15s var(--ease);
+}
+button.action:hover { background: color-mix(in oklab, var(--ground) 80%, #000 6%); }
+button.action.primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+button.action.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+
+.hint { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; margin-top: 8px; line-height: 1.6; }
+.hint kbd { background: var(--hairline); padding: 1px 5px; border-radius: 2px; font-family: 'SF Mono', monospace; font-size: 9px; color: var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="wordmark"><em>Jackson House</em> · Feed Scheduler</div>
+    <div class="kicker">Today → Aug 31 · Tue/Wed slots · Drag to swap</div>
+  </div>
+  <div class="stats">
+    <span>Slots<b id="sSlots">0</b></span>
+    <span>Filled<b id="sFilled">0</b></span>
+    <span>Accepted<b id="sAccepted">0</b></span>
+    <span>Rejected<b id="sRejected">0</b></span>
+    <span>Pool<b id="sPool">0</b></span>
+  </div>
+</header>
+
+<main>
+  <div class="pane">
+    <h3>Content pool</h3>
+    <div class="meta">Drag into feed</div>
+    <div class="pool-tabs">
+      <button class="active" data-tab="all">All <span id="tAll">0</span></button>
+      <button data-tab="new">New <span id="tNew">0</span></button>
+      <button data-tab="picks">Picks <span id="tPicks">0</span></button>
+    </div>
+    <div class="pool" id="pool"></div>
+    <div class="hint">
+      <kbd>drag</kbd> pool → slot replaces it<br>
+      <kbd>drag</kbd> slot → slot swaps<br>
+      <kbd>click</kbd> slot cycles status<br>
+      <kbd>right-click</kbd> slot marks carousel<br>
+      <kbd>Export</kbd> when ready
+    </div>
+  </div>
+
+  <div class="pane">
+    <h3>Feed · most recent top</h3>
+    <div class="meta">IG 3-col preview · 74 Tue/Wed slots</div>
+    <div class="feed-wrap"><div class="feed" id="feed"></div></div>
+  </div>
+</main>
+
+<footer>
+  <button class="action" onclick="resetSession()">Reset session</button>
+  <button class="action" onclick="clearStatuses()">Clear statuses</button>
+  <button class="action primary" onclick="exportFeed()">Export feed.json</button>
+</footer>
+
+<script>
+const INITIAL_SLOTS = [{"date": "2026-04-24", "dow": "Fri", "time": "17:30", "post": {"id": "sched_5", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776182070/T-36_popp3v.jpg", "caption": "Grapefruitty Tuti.\nCare free, spirit free \ud83c\udf38\nNonalcoholic gin, grapefruit NA spirit, strawberry, lemon \ud83c\udf53\ud83c\udf4b\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "Grapefruitty Tuti", "original_date": "2026-04-24 5:30 pm", "status": "accepted"}}, {"date": "2026-04-27", "dow": "Mon", "time": "17:30", "post": {"id": "sched_7", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182389/T-70_q9u8ug.jpg", "caption": "Elote Burger. \ud83c\udf54\ud83c\udf3d\n\nWe're not going to explain this one.\nJust order it.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Elote Burger. \ud83c\udf54\ud83c\udf3d", "original_date": "2026-04-27 11:30 am", "status": "accepted"}}, {"date": "2026-04-28", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-001", "source": "bulk", "batch": "BULK-001", "url": "nano_banana/jackson_house/BULK-001/variation_1.png", "caption": "Orecchiette\nHand-rolled. Sausage. Broccoli rabe.", "caption_preview": "Orecchiette", "status": "pending"}}, {"date": "2026-04-30", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-002", "source": "bulk", "batch": "BULK-002", "url": "nano_banana/jackson_house/BULK-002/variation_1.png", "caption": "Grilled Chicken Tacos\nSoft tortilla. Citrus. Crema.", "caption_preview": "Grilled Chicken Tacos", "status": "pending"}}, {"date": "2026-05-01", "dow": "Fri", "time": "17:30", "post": {"id": "sched_11", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182385/T-64_wbxysn.jpg", "caption": "Summer Scallops. \ud83c\udf0a\n\nSeared scallops, creamy corn, crab, and an edible flower.\nSummer never looked this good.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Summer Scallops. \ud83c\udf0a", "original_date": "2026-05-01 5:30 pm", "status": "accepted"}}, {"date": "2026-05-04", "dow": "Mon", "time": "17:30", "post": {"id": "sched_12", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776181944/T-16_nzlam9.jpg", "caption": "La Ultima.\nOne more & then we'll leave \ud83c\udf36\ufe0f\ud83c\udf78\nSt. George chili vodka, elote liqueur, mezcal, lime, house-made taj\u00edn syrup \ud83c\udf3d\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "La Ultima", "original_date": "2026-05-04 11:30 am", "status": "accepted"}}, {"date": "2026-05-05", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-003", "source": "bulk", "batch": "BULK-003", "url": "nano_banana/jackson_house/BULK-003/variation_1.png", "caption": "Lobster Roll\nToasted brioche. Cream sauce. Chives.", "caption_preview": "Lobster Roll", "status": "pending"}}, {"date": "2026-05-07", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-004", "source": "bulk", "batch": "BULK-004", "url": "nano_banana/jackson_house/BULK-004/variation_1.png", "caption": "Fried Catfish Fingers\nCrunch. Tartar. Lemon.", "caption_preview": "Fried Catfish Fingers", "status": "pending"}}, {"date": "2026-05-08", "dow": "Fri", "time": "17:30", "post": {"id": "sched_14", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776181961/T-28_n416rt.jpg", "caption": "Spritz From Switz.\nGlobe glass. Orange & purple. Lounge chair energy \ud83e\udee7\nFrench vodka, blood orange, mango, passion fruit, simple, prosecco, club soda \ud83e\udd42\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "Spritz From Switz", "original_date": "2026-05-08 5:30 pm", "status": "accepted"}}, {"date": "2026-05-11", "dow": "Mon", "time": "17:30", "post": {"id": "sched_17", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181896/Savora-50_nn5jca.jpg", "caption": "Shrimp & Lobster Scampi. \ud83e\udd9e\n\nButter. Garlic. Lobster. Shrimp.\nSome dishes don't need a long description.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Shrimp & Lobster Scampi. \ud83e\udd9e", "original_date": "2026-05-11 11:30 am", "status": "accepted"}}, {"date": "2026-05-12", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-005", "source": "bulk", "batch": "BULK-005", "url": "nano_banana/jackson_house/BULK-005/variation_1.png", "caption": "Peach Cobbler\nWarm. Fork-tender.", "caption_preview": "Peach Cobbler", "status": "pending"}}, {"date": "2026-05-14", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-006", "source": "bulk", "batch": "BULK-006", "url": "nano_banana/jackson_house/BULK-006/variation_1.png", "caption": "Berry Chantilly Cake\nCream. Berries. Done.", "caption_preview": "Berry Chantilly Cake", "status": "pending"}}, {"date": "2026-05-15", "dow": "Fri", "time": "17:30", "post": {"id": "sched_18", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182391/T-72_a1fnnt.jpg", "caption": "Chimichurri Steak. \ud83e\udd69\n\nSliced, sauced, and plated like it means it.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Chimichurri Steak. \ud83e\udd69", "original_date": "2026-05-15 5:30 pm", "status": "accepted"}}, {"date": "2026-05-18", "dow": "Mon", "time": "17:30", "post": {"id": "sched_20", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181965/T-33_ljpct3.jpg", "caption": "One In A Melon.\nWatermelon, sugar, lime! \u2026or whatever Harry said \ud83c\udf49\u2728\nGinger nonalcoholic spirit, basil, lime, watermelon soda \ud83c\udf3f\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "One In A Melon", "original_date": "2026-05-18 11:30 am", "status": "accepted"}}, {"date": "2026-05-19", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-007", "source": "bulk", "batch": "BULK-007", "url": "nano_banana/jackson_house/BULK-007/variation_1.png", "caption": "Grilled Chicken Tacos\nOrder of three.", "caption_preview": "Grilled Chicken Tacos", "status": "pending"}}, {"date": "2026-05-21", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-008", "source": "bulk", "batch": "BULK-008", "url": "nano_banana/jackson_house/BULK-008/variation_1.png", "caption": "Elote Burger\nJust order it.", "caption_preview": "Elote Burger", "status": "pending"}}, {"date": "2026-05-22", "dow": "Fri", "time": "17:30", "post": {"id": "sched_21", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181899/Savora-48_ikqslm.jpg", "caption": "Lobster & Shrimp Orzo. \ud83e\udd9e\n\nShaved parm. Herb bread roll. This one has regulars.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Lobster & Shrimp Orzo. \ud83e\udd9e", "original_date": "2026-05-22 5:30 pm", "status": "accepted"}}, {"date": "2026-05-25", "dow": "Mon", "time": "17:30", "post": {"id": "sched_27", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776181944/T-17_m7ajnn.jpg", "caption": "Toast Of The Town.\nPretty enough to stop the scroll \ud83c\udf77\nCoconut Cartel rum, Shanky's Whip Irish whiskey liqueur, Triplo, french toast milk syrup, lime & a pinch of salt \ud83e\udd42\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "Toast Of The Town", "original_date": "2026-05-25 11:30 am", "status": "accepted"}}, {"date": "2026-05-26", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-009", "source": "bulk", "batch": "BULK-009", "url": "nano_banana/jackson_house/BULK-009/variation_1.png", "caption": "Strawberry Layer Cake\nDessert, done simply.", "caption_preview": "Strawberry Layer Cake", "status": "pending"}}, {"date": "2026-05-28", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-010", "source": "bulk", "batch": "BULK-010", "url": "nano_banana/jackson_house/BULK-010/variation_1.png", "caption": "Lychee Spritz.\nCrisp. Floral. Cold.", "caption_preview": "Lychee Spritz.", "status": "pending"}}, {"date": "2026-05-29", "dow": "Fri", "time": "17:30", "post": {"id": "sched_29", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181955/T-24_fbffe5.jpg", "caption": "Nada De Mango.\nFizzy, spice, and everything nice \ud83d\udd25\nHouse-made taj\u00edn syrup, lime, & your choice of watermelon or grapefruit soda \ud83c\udf49\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "Nada De Mango", "original_date": "2026-05-29 5:30 pm", "status": "accepted"}}, {"date": "2026-06-01", "dow": "Mon", "time": "17:30", "post": {"id": "sched_30", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182404/T-87_gi54j4.jpg", "caption": "Orecchiette. \ud83c\udf5d\n\nSpicy sausage, rapini, white beans, poached egg, edible flower.\nPasta night, elevated.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Orecchiette. \ud83c\udf5d", "original_date": "2026-06-01 11:30 am", "status": "accepted"}}, {"date": "2026-06-02", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-011", "source": "bulk", "batch": "BULK-011", "url": "nano_banana/jackson_house/BULK-011/variation_1.png", "caption": "Grapefruitty Tuti.\nCare free, spirit free.", "caption_preview": "Grapefruitty Tuti.", "status": "pending"}}, {"date": "2026-06-04", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-012", "source": "bulk", "batch": "BULK-012", "url": "nano_banana/jackson_house/BULK-012/variation_1.png", "caption": "Nada De Mango.\nEverything to say.", "caption_preview": "Nada De Mango.", "status": "pending"}}, {"date": "2026-06-05", "dow": "Fri", "time": "17:30", "post": {"id": "sched_32", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776181955/T-25_zwdmp7.jpg", "caption": "Lychee Spritz.\nBrunch, but make it tropical \ud83c\udf7e\nLychee, maraschino, strawberry, prosecco, sprite \ud83c\udf38\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "Lychee Spritz", "original_date": "2026-06-05 5:30 pm", "status": "accepted"}}, {"date": "2026-06-08", "dow": "Mon", "time": "17:30", "post": {"id": "sched_35", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182410/T-94_cmcp4h.jpg", "caption": "Grilled Chicken Tacos. \ud83c\udf2e\n\nPineapple mango salsa. Pickled jalape\u00f1os. Chips on the side.\nThe taco you didn't know you needed.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Grilled Chicken Tacos. \ud83c\udf2e", "original_date": "2026-06-08 11:30 am", "status": "accepted"}}, {"date": "2026-06-09", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-013", "source": "bulk", "batch": "BULK-013", "url": "nano_banana/jackson_house/BULK-013/variation_1.png", "caption": "Warm out of the oven.\nButter melts on contact.", "caption_preview": "Warm out of the oven.", "status": "pending"}}, {"date": "2026-06-11", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-014", "source": "bulk", "batch": "BULK-014", "url": "nano_banana/jackson_house/BULK-014/variation_1.png", "caption": "You already know.\nJackson House \u00b7 Middletown Delaware", "caption_preview": "You already know.", "status": "pending"}}, {"date": "2026-06-12", "dow": "Fri", "time": "17:30", "post": {"id": "sched_38", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182379/T-56_s1wh2k.jpg", "caption": "Good drinks, better company. \ud83e\udd42\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Good drinks, better company. \ud83e\udd42", "original_date": "2026-06-12 5:30 pm", "status": "accepted"}}, {"date": "2026-06-15", "dow": "Mon", "time": "17:30", "post": {"id": "sched_39", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182406/T-89_cfbzjh.jpg", "caption": "Linguine. \ud83c\udf5d\n\nCream sauce, shaved parm, cherry tomatoes, red edible flower.\nSimple. Stunning. Yours.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Linguine. \ud83c\udf5d", "original_date": "2026-06-15 11:30 am", "status": "accepted"}}, {"date": "2026-06-16", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-015", "source": "bulk", "batch": "BULK-015", "url": "nano_banana/jackson_house/BULK-015/variation_1.png", "caption": "Some things don't need to be complicated.\nJackson House \u00b7 17 Wood St", "caption_preview": "Some things don't need to be complicated.", "status": "pending"}}, {"date": "2026-06-18", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-016", "source": "bulk", "batch": "BULK-016", "url": "nano_banana/jackson_house/BULK-016/variation_1.png", "caption": "Reserve your table.\nJackson House \u00b7 Middletown Delaware", "caption_preview": "Reserve your table.", "status": "pending"}}, {"date": "2026-06-19", "dow": "Fri", "time": "17:30", "post": {"id": "sched_43", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776181947/T-19_dowwdf.jpg", "caption": "Key Lime Mule.\nBrunch has a new main character \ud83c\udf4b\nPinnacle whipped vodka, simple, lime, ginger beer \ud83e\udeda\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "Key Lime Mule", "original_date": "2026-06-19 5:30 pm", "status": "accepted"}}, {"date": "2026-06-22", "dow": "Mon", "time": "17:30", "post": {"id": "sched_44", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182394/T-75_rin82p.jpg", "caption": "Mixed Greens. \ud83e\uded0\n\nBlueberries, cucumber, candied walnuts, goat cheese, balsamic.\nThe salad that makes salad people out of non-salad people.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Mixed Greens. \ud83e\uded0", "original_date": "2026-06-22 11:30 am", "status": "accepted"}}, {"date": "2026-06-23", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-017", "source": "bulk", "batch": "BULK-017", "url": "nano_banana/jackson_house/BULK-017/variation_1.png", "caption": "Brunch.\nSaturdays & Sundays \u00b7 10am\u20132pm", "caption_preview": "Brunch.", "status": "pending"}}, {"date": "2026-06-25", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-018", "source": "bulk", "batch": "BULK-018", "url": "nano_banana/jackson_house/BULK-018/variation_1.png", "caption": "Steak Night.\nBison Ribeye \u00b7 Wagyu \u00b7 Dry-aged", "caption_preview": "Steak Night.", "status": "pending"}}, {"date": "2026-06-26", "dow": "Fri", "time": "17:30", "post": {"id": "sched_46", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182072/T-39_x9cf6s.jpg", "caption": "New cocktail menu. \ud83c\udf79\nEvery single one, in one shot.\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "New cocktail menu. \ud83c\udf79", "original_date": "2026-06-26 5:30 pm", "status": "accepted"}}, {"date": "2026-06-29", "dow": "Mon", "time": "17:30", "post": {"id": "sched_47", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776181935/T-10_d8pyvc.jpg", "caption": "Bite The Bulleit.\nA little bite, a lot of Bulleit \ud83e\udd43\nBulleit Bourbon, St. Germain, basil simple, house-made lemon bitters \ud83c\udf3f\ud83c\udf4b\nBest New Restaurant in Delaware // Delaware Today 2025 \ud83c\udfc6\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table \u2014 link in bio.", "caption_preview": "Bite The Bulleit", "original_date": "2026-06-29 11:30 am", "status": "accepted"}}, {"date": "2026-06-30", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-019", "source": "bulk", "batch": "BULK-019", "url": "nano_banana/jackson_house/BULK-019/variation_1.png", "caption": "Live Jazz.\nThursdays \u00b7 7pm\u201310pm", "caption_preview": "Live Jazz.", "status": "pending"}}, {"date": "2026-07-02", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-020", "source": "bulk", "batch": "BULK-020", "url": "nano_banana/jackson_house/BULK-020/variation_1.png", "caption": "Anniversary.\nOne year. Many thanks.", "caption_preview": "Anniversary.", "status": "pending"}}, {"date": "2026-07-03", "dow": "Fri", "time": "17:30", "post": {"id": "sched_49", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181902/Savora-54_rkbguc.jpg", "caption": "Blueberry Balsamic Salad. \ud83e\uded0\n\nMixed greens, grilled shrimp, blueberries, balsamic drizzle.\nLight, bright, and worth every bite.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Blueberry Balsamic Salad. \ud83e\uded0", "original_date": "2026-07-03 5:30 pm", "status": "accepted"}}, {"date": "2026-07-06", "dow": "Mon", "time": "17:30", "post": {"id": "sched_56", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776182415/T-104_kvomog.jpg", "caption": "Berry Chantilly Cake. \ud83c\udf70\n\nLayered cream cake, mixed berry crown, fresh mint.\nSave room. You'll want to save room.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Berry Chantilly Cake. \ud83c\udf70", "original_date": "2026-07-06 11:30 am", "status": "accepted"}}, {"date": "2026-07-07", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-021", "source": "bulk", "batch": "BULK-021", "url": "nano_banana/jackson_house/BULK-021/variation_1.png", "caption": "Delaware Today.\nBest New Restaurant 2025.", "caption_preview": "Delaware Today.", "status": "pending"}}, {"date": "2026-07-09", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-022", "source": "bulk", "batch": "BULK-022", "url": "nano_banana/jackson_house/BULK-022/variation_1.png", "caption": "Closed Christmas.\nBack the 26th with steak.", "caption_preview": "Closed Christmas.", "status": "pending"}}, {"date": "2026-07-10", "dow": "Fri", "time": "17:30", "post": {"id": "sched_58", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182073/T-40_ywbktv.jpg", "caption": "The team behind the table. \ud83c\udf3f\n\nNamed Best New Restaurant in Delaware \u2014 Delaware Today 2025.\nWe're just getting started.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "The team behind the table. \ud83c\udf3f", "original_date": "2026-07-10 5:30 pm", "status": "accepted"}}, {"date": "2026-07-13", "dow": "Mon", "time": "17:30", "post": {"id": "sched_59", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181911/Savora-63_up1xn8.jpg", "caption": "Wings. \ud83c\udf57\n\nCrispy, sauced, and gone before you blink.\nAsk your server about the flavors.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Wings. \ud83c\udf57", "original_date": "2026-07-13 11:30 am", "status": "accepted"}}, {"date": "2026-07-14", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-023", "source": "bulk", "batch": "BULK-023", "url": "nano_banana/jackson_house/BULK-023/variation_1.png", "caption": "Patio Open.\nWeather permitting \u00b7 First-come", "caption_preview": "Patio Open.", "status": "pending"}}, {"date": "2026-07-16", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-024", "source": "bulk", "batch": "BULK-024", "url": "nano_banana/jackson_house/BULK-024/variation_1.png", "caption": "The bar.\nHeard's The Last Word \u00b7 Bite The Bulleit \u00b7 Grapefruitty Tuti", "caption_preview": "The bar.", "status": "pending"}}, {"date": "2026-07-17", "dow": "Fri", "time": "17:30", "post": {"id": "sched_65", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776182418/T-108_cai2nc.jpg", "caption": "Peach Cobbler. \ud83c\udf51\n\nCaramelized peach compote, graham cracker crumble, whipped cream.\nWarm, sweet, and worth every bite.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Peach Cobbler. \ud83c\udf51", "original_date": "2026-07-17 5:30 pm", "status": "accepted"}}, {"date": "2026-07-20", "dow": "Mon", "time": "17:30", "post": {"id": "sched_66", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182366/T-44_rpqhnb.jpg", "caption": "Behind the bar. \ud83d\udc40\n\nEvery great cocktail starts with a team that cares.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Behind the bar. \ud83d\udc40", "original_date": "2026-07-20 11:30 am", "status": "accepted"}}, {"date": "2026-07-21", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-025", "source": "bulk", "batch": "BULK-025", "url": "nano_banana/jackson_house/BULK-025/variation_1.png", "caption": "Chef's picks.\nBison Ribeye \u00b7 Passionfruit Salmon \u00b7 Elote Burger", "caption_preview": "Chef's picks.", "status": "pending"}}, {"date": "2026-07-23", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-026", "source": "bulk", "batch": "BULK-026", "url": "nano_banana/jackson_house/BULK-026/variation_1.png", "caption": "On heritage.\nThe classics for a reason.", "caption_preview": "On heritage.", "status": "pending"}}, {"date": "2026-07-24", "dow": "Fri", "time": "17:30", "post": {"id": "sched_70", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776181914/Savora-64_m92exy.jpg", "caption": "Chef's Table. \ud83c\udf3f\n\nA taste of everything we're serving.\nThis is Jackson House.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Chef's Table. \ud83c\udf3f", "original_date": "2026-07-24 5:30 pm", "status": "accepted"}}, {"date": "2026-07-27", "dow": "Mon", "time": "17:30", "post": {"id": "sched_72", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182414/T-101_x9jaky.jpg", "caption": "Strawberry Layer Cake. \ud83c\udf53\n\nTall, layered, and draped in strawberry glaze.\nThis one photographs itself.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Strawberry Layer Cake. \ud83c\udf53", "original_date": "2026-07-27 11:30 am", "status": "accepted"}}, {"date": "2026-07-28", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-027", "source": "bulk", "batch": "BULK-027", "url": "nano_banana/jackson_house/BULK-027/variation_1.png", "caption": "On quality.\nEverything on the plate earned its place.", "caption_preview": "On quality.", "status": "pending"}}, {"date": "2026-07-30", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-028", "source": "bulk", "batch": "BULK-028", "url": "nano_banana/jackson_house/BULK-028/variation_1.png", "caption": "On technique.\nThe right temperature is a form of respect.", "caption_preview": "On technique.", "status": "pending"}}, {"date": "2026-07-31", "dow": "Fri", "time": "17:30", "post": {"id": "sched_75", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181882/Savora-31_qclfv2.jpg", "caption": "Burrata. \ud83c\udf45\n\nHeirloom tomatoes, fresh burrata, basil, balsamic.\nSome things don't need to be complicated.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Burrata. \ud83c\udf45", "original_date": "2026-07-31 5:30 pm", "status": "accepted"}}, {"date": "2026-08-03", "dow": "Mon", "time": "17:30", "post": {"id": "sched_77", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776181921/Savora-70_xsnvaw.jpg", "caption": "Passionfruit Salmon. \ud83d\udc1f\n\nPassionfruit glazed. Broccoli. Garlic mashed potatoes.\nBack by popular demand.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Passionfruit Salmon. \ud83d\udc1f", "original_date": "2026-08-03 11:30 am", "status": "accepted"}}, {"date": "2026-08-04", "dow": "Tue", "time": "17:30", "post": {"id": "bulk_BULK-029", "source": "bulk", "batch": "BULK-029", "url": "nano_banana/jackson_house/BULK-029/variation_1.png", "caption": "The bar.\nHeard's The Last Word \u00b7 Bite The Bulleit \u00b7 Grapefruitty Tuti", "caption_preview": "The bar.", "status": "pending"}}, {"date": "2026-08-06", "dow": "Thu", "time": "17:30", "post": {"id": "bulk_BULK-030", "source": "bulk", "batch": "BULK-030", "url": "nano_banana/jackson_house/BULK-030/variation_1.png", "caption": "This week.\nChimichurri Steak \u00b7 Orecchiette \u00b7 Lobster Roll \u00b7 Summer Scallops", "caption_preview": "This week.", "status": "pending"}}, {"date": "2026-08-07", "dow": "Fri", "time": "17:30", "post": {"id": "sched_83", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182398/T-78_kctose.jpg", "caption": "Fried Chicken Wings. \ud83c\udf57\n\nChili-soy dipping sauce. Dark, crispy, built for sharing.\n(Nobody actually shares though.)\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Fried Chicken Wings. \ud83c\udf57", "original_date": "2026-08-07 5:30 pm", "status": "accepted"}}, {"date": "2026-08-10", "dow": "Mon", "time": "17:30", "post": {"id": "sched_85", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776182404/T-83_xtetuc.jpg", "caption": "Fried Chicken Wrap. \ud83c\udf2f\n\nCut in half so you can see exactly what's inside.\nSpoiler: it's everything.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Fried Chicken Wrap. \ud83c\udf2f", "original_date": "2026-08-10 11:30 am", "status": "accepted"}}, {"date": "2026-08-11", "dow": "Tue", "time": "17:30", "post": {"id": "pick_4s_BULK-006_V1", "source": "picks", "filename": "4s_BULK-006_V1.png", "url": "PICKS/jackson_house/4s_BULK-006_V1.png", "caption": "4s BULK-006 V1", "caption_preview": "4s_BULK-006_V1", "status": "accepted"}}, {"date": "2026-08-13", "dow": "Thu", "time": "17:30", "post": {"id": "pick_4s_BULK-013_V1", "source": "picks", "filename": "4s_BULK-013_V1.png", "url": "PICKS/jackson_house/4s_BULK-013_V1.png", "caption": "4s BULK-013 V1", "caption_preview": "4s_BULK-013_V1", "status": "accepted"}}, {"date": "2026-08-14", "dow": "Fri", "time": "17:30", "post": {"id": "sched_87", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182398/T-81_fps42k.jpg", "caption": "House Guacamole. \ud83e\udd51\n\nFresh, seasonal, made to order.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "House Guacamole. \ud83e\udd51", "original_date": "2026-08-14 5:30 pm", "status": "accepted"}}, {"date": "2026-08-17", "dow": "Mon", "time": "17:30", "post": {"id": "sched_88", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182369/T-49_m7ttqr.jpg", "caption": "Fried Catfish Fingers. \ud83d\udc1f\n\nCrispy, golden, mustard dipping sauce.\nSouthern comfort, Jackson House style.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Fried Catfish Fingers. \ud83d\udc1f", "original_date": "2026-08-17 11:30 am", "status": "accepted"}}, {"date": "2026-08-18", "dow": "Tue", "time": "17:30", "post": {"id": "pick_4s_BULK-017_V1", "source": "picks", "filename": "4s_BULK-017_V1.png", "url": "PICKS/jackson_house/4s_BULK-017_V1.png", "caption": "4s BULK-017 V1", "caption_preview": "4s_BULK-017_V1", "status": "accepted"}}, {"date": "2026-08-20", "dow": "Thu", "time": "17:30", "post": {"id": "pick_4s_BULK-020_V1", "source": "picks", "filename": "4s_BULK-020_V1.png", "url": "PICKS/jackson_house/4s_BULK-020_V1.png", "caption": "4s BULK-020 V1", "caption_preview": "4s_BULK-020_V1", "status": "accepted"}}, {"date": "2026-08-21", "dow": "Fri", "time": "17:30", "post": {"id": "sched_90", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182368/T-46_jvps4e.jpg", "caption": "Fried Okra. \ud83c\udf3f\n\nCrispy, golden, and gone before you know it.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Fried Okra. \ud83c\udf3f", "original_date": "2026-08-21 5:30 pm", "status": "accepted"}}, {"date": "2026-08-24", "dow": "Mon", "time": "17:30", "post": {"id": "sched_92", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776182370/T-48_rpmvtg.jpg", "caption": "Cornbread Muffins. \ud83e\uddc8\n\nWarm out of the oven. Butter melts on contact.\n\n\ud83d\udccd 17 Wood St, Middletown, DE 19709\nReserve your table | link in bio \ud83d\udccd", "caption_preview": "Cornbread Muffins. \ud83e\uddc8", "original_date": "2026-08-24 11:30 am", "status": "accepted"}}, {"date": "2026-08-25", "dow": "Tue", "time": "17:30", "post": {"id": "pick_4s_BULK-025_V1", "source": "picks", "filename": "4s_BULK-025_V1.png", "url": "PICKS/jackson_house/4s_BULK-025_V1.png", "caption": "4s BULK-025 V1", "caption_preview": "4s_BULK-025_V1", "status": "accepted"}}, {"date": "2026-08-27", "dow": "Thu", "time": "17:30", "post": {"id": "pick_4s_BULK-026_V1", "source": "picks", "filename": "4s_BULK-026_V1.png", "url": "PICKS/jackson_house/4s_BULK-026_V1.png", "caption": "4s BULK-026 V1", "caption_preview": "4s_BULK-026_V1", "status": "accepted"}}, {"date": "2026-08-28", "dow": "Fri", "time": "17:30", "post": null}, {"date": "2026-08-31", "dow": "Mon", "time": "17:30", "post": null}];
+const INITIAL_POOL_NEW = [];
+const INITIAL_POOL_PICKS = [{"id": "pick_4s_BULK-034_V1", "source": "picks", "filename": "4s_BULK-034_V1.png", "url": "PICKS/jackson_house/4s_BULK-034_V1.png", "caption": "4s BULK-034 V1", "caption_preview": "4s_BULK-034_V1", "status": "accepted"}, {"id": "pick_4s_BULK-035_V1", "source": "picks", "filename": "4s_BULK-035_V1.png", "url": "PICKS/jackson_house/4s_BULK-035_V1.png", "caption": "4s BULK-035 V1", "caption_preview": "4s_BULK-035_V1", "status": "accepted"}, {"id": "pick_4s_BULK-036_V1", "source": "picks", "filename": "4s_BULK-036_V1.png", "url": "PICKS/jackson_house/4s_BULK-036_V1.png", "caption": "4s BULK-036 V1", "caption_preview": "4s_BULK-036_V1", "status": "accepted"}, {"id": "pick_4s_BULK-040_V1", "source": "picks", "filename": "4s_BULK-040_V1.png", "url": "PICKS/jackson_house/4s_BULK-040_V1.png", "caption": "4s BULK-040 V1", "caption_preview": "4s_BULK-040_V1", "status": "accepted"}, {"id": "pick_4s_BULK-047_V1", "source": "picks", "filename": "4s_BULK-047_V1.png", "url": "PICKS/jackson_house/4s_BULK-047_V1.png", "caption": "4s BULK-047 V1", "caption_preview": "4s_BULK-047_V1", "status": "accepted"}, {"id": "pick_4s_BULK-048_V1", "source": "picks", "filename": "4s_BULK-048_V1.png", "url": "PICKS/jackson_house/4s_BULK-048_V1.png", "caption": "4s BULK-048 V1", "caption_preview": "4s_BULK-048_V1", "status": "accepted"}, {"id": "pick_4s_BULK-049_V1", "source": "picks", "filename": "4s_BULK-049_V1.png", "url": "PICKS/jackson_house/4s_BULK-049_V1.png", "caption": "4s BULK-049 V1", "caption_preview": "4s_BULK-049_V1", "status": "accepted"}, {"id": "pick_4s_BULK-050_V1", "source": "picks", "filename": "4s_BULK-050_V1.png", "url": "PICKS/jackson_house/4s_BULK-050_V1.png", "caption": "4s BULK-050 V1", "caption_preview": "4s_BULK-050_V1", "status": "accepted"}, {"id": "pick_4s_JH-W-O1_V1", "source": "picks", "filename": "4s_JH-W-O1_V1.png", "url": "PICKS/jackson_house/4s_JH-W-O1_V1.png", "caption": "4s JH-W-O1 V1", "caption_preview": "4s_JH-W-O1_V1", "status": "accepted"}, {"id": "pick_4s_JH-W-O3_V1", "source": "picks", "filename": "4s_JH-W-O3_V1.png", "url": "PICKS/jackson_house/4s_JH-W-O3_V1.png", "caption": "4s JH-W-O3 V1", "caption_preview": "4s_JH-W-O3_V1", "status": "accepted"}, {"id": "pick_4s_JH-W-O4_V1", "source": "picks", "filename": "4s_JH-W-O4_V1.png", "url": "PICKS/jackson_house/4s_JH-W-O4_V1.png", "caption": "4s JH-W-O4 V1", "caption_preview": "4s_JH-W-O4_V1", "status": "accepted"}, {"id": "pick_4s_JH-W-O5_V1", "source": "picks", "filename": "4s_JH-W-O5_V1.png", "url": "PICKS/jackson_house/4s_JH-W-O5_V1.png", "caption": "4s JH-W-O5 V1", "caption_preview": "4s_JH-W-O5_V1", "status": "accepted"}, {"id": "pick_5s_BULK-039_V1", "source": "picks", "filename": "5s_BULK-039_V1.png", "url": "PICKS/jackson_house/5s_BULK-039_V1.png", "caption": "5s BULK-039 V1", "caption_preview": "5s_BULK-039_V1", "status": "accepted"}, {"id": "pick_5s_BULK-046_V1", "source": "picks", "filename": "5s_BULK-046_V1.png", "url": "PICKS/jackson_house/5s_BULK-046_V1.png", "caption": "5s BULK-046 V1", "caption_preview": "5s_BULK-046_V1", "status": "accepted"}];
+const BRAND = "jackson_house";
+const STORAGE_KEY = "feedv3_" + BRAND + "_" + INITIAL_SLOTS.length;
+
+let state = {
+  slots: [],          // [{date, dow, time, post: {...} | null}]
+  pool: [],           // unified content pool — everything not in a slot
+  activeTab: "all",
+};
+
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    state = JSON.parse(saved);
+  } else {
+    state.slots = JSON.parse(JSON.stringify(INITIAL_SLOTS));
+    state.pool = [...INITIAL_POOL_NEW, ...INITIAL_POOL_PICKS];
+  }
+} catch(e) {
+  state.slots = JSON.parse(JSON.stringify(INITIAL_SLOTS));
+  state.pool = [...INITIAL_POOL_NEW, ...INITIAL_POOL_PICKS];
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function resolveUrl(post) {
+  if (!post) return "";
+  if (post.url.startsWith("http")) return post.url;
+  return post.url;
+}
+
+function formatDate(isoDate, dow, time) {
+  const d = new Date(isoDate + "T00:00:00");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${dow.toUpperCase()} ${mm}-${dd}`;
+}
+
+function renderPool() {
+  const el = document.getElementById("pool");
+  // Filter pool by active tab
+  let filtered = state.pool;
+  if (state.activeTab === "new") filtered = state.pool.filter(p => p.source === "bulk");
+  else if (state.activeTab === "picks") filtered = state.pool.filter(p => p.source === "picks");
+  // Tab counts
+  const cNew = state.pool.filter(p => p.source === "bulk").length;
+  const cPicks = state.pool.filter(p => p.source === "picks").length;
+  document.getElementById("tAll").textContent = state.pool.length;
+  document.getElementById("tNew").textContent = cNew;
+  document.getElementById("tPicks").textContent = cPicks;
+  el.innerHTML = "";
+  filtered.forEach((post) => {
+    // Find real pool index so drop handlers can locate by identity
+    const realIdx = state.pool.indexOf(post);
+    const c = document.createElement("div");
+    c.className = "pool-card";
+    c.draggable = true;
+    c.dataset.source = "pool";
+    c.dataset.idx = realIdx;
+    c.innerHTML = `
+      <img src="${resolveUrl(post)}" loading="lazy">
+      <div class="info">
+        <div class="caption">${(post.caption_preview || "").replace(/</g, "&lt;")}</div>
+        <div class="tag">${post.source || "new"}</div>
+      </div>
+    `;
+    c.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", JSON.stringify({ from: "pool", idx: realIdx }));
+    });
+    el.appendChild(c);
+  });
+  document.getElementById("sPool").textContent = state.pool.length;
+}
+
+function renderFeed() {
+  const el = document.getElementById("feed");
+  el.innerHTML = "";
+  state.slots.forEach((slot, idx) => {
+    const div = document.createElement("div");
+    div.className = "slot";
+    div.dataset.idx = idx;
+    if (slot.post) {
+      div.classList.add("status-" + (slot.post.status || "accepted"));
+      if (slot.post.carousel) div.classList.add("carousel");
+      div.innerHTML = `
+        <img src="${resolveUrl(slot.post)}" loading="lazy">
+        <div class="date-badge">${formatDate(slot.date, slot.dow, slot.time)}</div>
+        ${slot.post.source && slot.post.source !== "scheduled" ? '<div class="source-badge">' + slot.post.source.toUpperCase() + '</div>' : ""}
+      `;
+      div.draggable = true;
+      div.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ from: "slot", idx }));
+      });
+      div.addEventListener("click", (e) => {
+        if (!slot.post) return;
+        const next = { accepted: "rejected", rejected: "pending", pending: "accepted" };
+        state.slots[idx].post.status = next[state.slots[idx].post.status || "accepted"];
+        save();
+        renderFeed();
+      });
+      div.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (!slot.post) return;
+        state.slots[idx].post.carousel = !state.slots[idx].post.carousel;
+        save();
+        renderFeed();
+      });
+    } else {
+      div.classList.add("empty");
+      div.innerHTML = `<div class="date-badge">${formatDate(slot.date, slot.dow, slot.time)}</div>`;
+    }
+    div.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      div.classList.add("drag-over");
+    });
+    div.addEventListener("dragleave", () => div.classList.remove("drag-over"));
+    div.addEventListener("drop", (e) => {
+      e.preventDefault();
+      div.classList.remove("drag-over");
+      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+      handleDrop(data, idx);
+    });
+    el.appendChild(div);
+  });
+  updateStats();
+}
+
+function handleDrop(drag, targetIdx) {
+  if (drag.from === "pool") {
+    const post = state.pool[drag.idx];
+    if (!post) return;
+    // Remove from pool
+    state.pool.splice(drag.idx, 1);
+    // Evict target slot's current post BACK to pool (top)
+    const evicted = state.slots[targetIdx].post;
+    if (evicted) state.pool.unshift(evicted);
+    // Place new post in slot
+    state.slots[targetIdx].post = post;
+    post.status = post.status || "pending";
+  } else if (drag.from === "slot") {
+    if (drag.idx === targetIdx) return;
+    // SWAP the two slot posts (dates stay)
+    const a = state.slots[drag.idx].post;
+    const b = state.slots[targetIdx].post;
+    state.slots[drag.idx].post = b;
+    state.slots[targetIdx].post = a;
+  }
+  save();
+  renderFeed();
+  renderPool();
+}
+
+function updateStats() {
+  let filled = 0, accepted = 0, rejected = 0;
+  state.slots.forEach(s => {
+    if (s.post) {
+      filled++;
+      const st = s.post.status || "accepted";
+      if (st === "accepted") accepted++;
+      else if (st === "rejected") rejected++;
+    }
+  });
+  document.getElementById("sSlots").textContent = state.slots.length;
+  document.getElementById("sFilled").textContent = filled;
+  document.getElementById("sAccepted").textContent = accepted;
+  document.getElementById("sRejected").textContent = rejected;
+}
+
+function resetSession() {
+  if (!confirm("Reset entire session? All status + swap changes will be lost.")) return;
+  state.slots = JSON.parse(JSON.stringify(INITIAL_SLOTS));
+  state.pool = [...INITIAL_POOL_NEW, ...INITIAL_POOL_PICKS];
+  save();
+  renderAll();
+}
+
+function clearStatuses() {
+  state.slots.forEach(s => {
+    if (s.post && s.post.source !== "scheduled") s.post.status = "pending";
+  });
+  save();
+  renderFeed();
+}
+
+function exportFeed() {
+  const payload = {
+    brand: BRAND,
+    exported_at: new Date().toISOString(),
+    slot_count: state.slots.length,
+    slots: state.slots.map(s => ({
+      date: s.date,
+      dow: s.dow,
+      time: s.time,
+      scheduled_at: s.date + " " + s.time,
+      post: s.post ? {
+        source: s.post.source,
+        id: s.post.id,
+        url: s.post.url,
+        caption: s.post.caption,
+        caption_preview: s.post.caption_preview,
+        batch: s.post.batch || null,
+        filename: s.post.filename || null,
+        status: s.post.status || "accepted",
+        carousel: !!s.post.carousel,
+      } : null,
+    })),
+    pool_remaining: state.pool,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "feed_" + BRAND + "_" + Date.now() + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll(".pool-tabs button").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+  renderPool();
+}
+
+function renderAll() {
+  renderFeed();
+  renderPool();
+}
+
+document.querySelectorAll(".pool-tabs button").forEach(b => {
+  b.addEventListener("click", () => switchTab(b.dataset.tab));
+});
+
+renderAll();
+</script>
+</body>
+</html>

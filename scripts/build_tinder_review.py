@@ -44,6 +44,7 @@ BRAND_NAMES = {
     "blue_mezcal": "Blue Mezcal",
     "jackson_house": "Jackson House",
     "azteca": "El Azteca",
+    "savora": "Savora",
 }
 
 
@@ -92,6 +93,21 @@ THEMES = {
         "card_shadow": "0 22px 48px -18px rgba(230, 57, 70, 0.25)",
         "body_bg":     "radial-gradient(ellipse at top left, #FFE4F1 0%, #F8F2DF 55%, #E1F5F4 100%)",
         "grain":       "0.025",
+    },
+    "savora": {
+        "font_hero": "'Fraunces', serif",
+        "font_ui":   "'Geist', sans-serif",
+        "google_fonts": "family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Geist:wght@400;500;600;700",
+        "ink":         "#F2EFEB",
+        "ink_soft":    "#D9D4CE",
+        "ground":      "#00060B",
+        "ground_soft": "#062423",
+        "accent":      "#C2612C",
+        "muted":       "#7B9693",
+        "hairline":    "rgba(43, 140, 131, 0.28)",
+        "card_shadow": "0 26px 60px -18px rgba(194, 97, 44, 0.22)",
+        "body_bg":     "radial-gradient(ellipse at top, #062423 0%, #010908 55%, #00060B 100%)",
+        "grain":       "0.055",
     },
 }
 
@@ -551,7 +567,9 @@ window.addEventListener("error", (e) => {{
 }});
 const IMAGES = {images_json};
 const BRAND = "{brand}";
-const STORAGE_KEY = "review_" + BRAND + "_v3";
+// Key includes image count so new batches reset state
+// Bump version when batch content changes materially
+const STORAGE_KEY = "review_" + BRAND + "_v5_" + IMAGES.length;
 
 let state = {{ index: 0, decisions: [] }};
 

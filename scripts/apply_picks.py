@@ -50,7 +50,13 @@ def main() -> None:
             continue
         images = by_rating.get(str(star), []) or by_rating.get(star, [])
         for img in images:
-            src = pathlib.Path(img["path"])
+            raw = pathlib.Path(img["path"])
+            # Path in approved.json may be relative to OUTPUT/ (from HTTP server
+            # root) — resolve against ROOT/OUTPUT if not absolute
+            if not raw.is_absolute():
+                src = ROOT / "OUTPUT" / raw
+            else:
+                src = raw
             if not src.exists():
                 print(f"  ! missing: {src}")
                 skipped_missing += 1

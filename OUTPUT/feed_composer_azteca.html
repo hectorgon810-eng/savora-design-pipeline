@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feed · El Azteca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-hero: 'Alfa Slab One', serif;
+  --font-ui: 'Outfit', sans-serif;
+  --ink: #18140f;
+  --ground: #F8F2DF;
+  --accent: #E63946;
+  --muted: #7a6e55;
+  --hairline: rgba(230, 57, 70, 0.24);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100dvh; background: var(--ground); color: var(--ink); font-family: var(--font-ui); overflow: hidden; }
+body { display: flex; flex-direction: column; }
+
+header {
+  padding: 14px 22px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 20px;
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in oklab, var(--ground) 94%, transparent);
+  z-index: 10;
+}
+header .wordmark { font-family: var(--font-hero); font-style: italic; font-size: 24px; color: var(--ink); letter-spacing: -0.01em; }
+header .wordmark em { font-style: normal; font-weight: 600; }
+header .kicker { font-size: 10px; color: var(--muted); letter-spacing: 0.22em; text-transform: uppercase; margin-top: 4px; }
+header .stats { display: flex; gap: 14px; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+header .stats b { color: var(--ink); font-weight: 600; margin-left: 4px; font-variant-numeric: tabular-nums; }
+
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  overflow: hidden;
+  min-height: 0;
+  height: calc(100dvh - 140px); /* explicit bound so feed-wrap definitely scrolls */
+}
+
+.pane {
+  background: color-mix(in oklab, var(--ground) 94%, #000 2%);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 14px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: 0;  /* flex overflow fix — without this, children don't scroll */
+}
+.pane h3 { font-family: var(--font-hero); font-style: italic; font-weight: 400; font-size: 18px; color: var(--ink); }
+.pane .meta { font-size: 10px; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; }
+
+/* Pool (left) */
+.pool-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.pool-tabs button {
+  flex: 1; background: transparent; border: 1px solid var(--hairline);
+  color: var(--muted); padding: 6px 10px; font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; border-radius: 4px;
+  cursor: pointer; font-family: var(--font-ui);
+  transition: all 0.15s var(--ease);
+}
+.pool-tabs button.active { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.pool { overflow-y: auto; padding-right: 4px; flex: 1; min-height: 0; max-height: calc(100dvh - 300px); }
+.pool-card {
+  background: var(--ground); border: 1px solid var(--hairline);
+  border-radius: 6px; margin-bottom: 8px; padding: 6px;
+  cursor: grab; transition: transform 0.15s var(--ease), border-color 0.15s var(--ease);
+  display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: center;
+}
+.pool-card:hover { transform: translateX(2px); border-color: var(--accent); }
+.pool-card img { width: 56px; height: 70px; object-fit: cover; border-radius: 3px; background: #eee; }
+.pool-card .info { overflow: hidden; }
+.pool-card .caption { font-size: 11px; color: var(--ink); font-weight: 500; line-height: 1.3; max-height: 2.6em; overflow: hidden; }
+.pool-card .tag { font-size: 9px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
+
+/* Feed (center) */
+.feed-wrap { overflow-y: scroll; overflow-x: hidden; padding: 4px; flex: 1; min-height: 0; scrollbar-width: auto; max-height: calc(100dvh - 230px); }
+.feed-wrap::-webkit-scrollbar { width: 12px; }
+.feed-wrap::-webkit-scrollbar-track { background: color-mix(in oklab, var(--ground) 80%, #000 4%); border-radius: 6px; }
+.feed-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+.feed-wrap::-webkit-scrollbar-thumb:hover { border-width: 1px; }
+.pool::-webkit-scrollbar { width: 10px; }
+.pool::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 5px; opacity: 0.5; }
+.pool::-webkit-scrollbar-track { background: transparent; }
+.feed {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 3px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.slot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: color-mix(in oklab, var(--ground) 80%, #000 4%);
+  border: 2px solid transparent;
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), transform 0.15s var(--ease);
+}
+.slot:hover { z-index: 3; transform: scale(1.04); }
+.slot img { width: 100%; height: 100%; object-fit: cover; display: block; background: color-mix(in oklab, var(--ground) 70%, #000 10%); }
+.slot.empty { background: repeating-linear-gradient(45deg, color-mix(in oklab, var(--ground) 85%, #000 3%), color-mix(in oklab, var(--ground) 85%, #000 3%) 6px, color-mix(in oklab, var(--ground) 80%, #000 5%) 6px, color-mix(in oklab, var(--ground) 80%, #000 5%) 12px); border-color: var(--hairline); }
+.slot.empty::after { content: "drop"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; }
+.slot .date-badge {
+  position: absolute; top: 4px; left: 4px; padding: 2px 6px;
+  background: rgba(0,0,0,0.78); color: #fff;
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  border-radius: 3px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.slot .source-badge {
+  position: absolute; top: 4px; right: 4px; padding: 2px 6px;
+  background: var(--accent); color: var(--ground);
+  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+  border-radius: 3px; font-weight: 700;
+}
+.slot.status-accepted { border-color: #4caf50; }
+.slot.status-rejected { border-color: #e77e7e; opacity: 0.55; }
+.slot.status-pending { border-color: color-mix(in oklab, var(--accent) 65%, transparent); }
+.slot.carousel::before {
+  content: "⎘"; position: absolute; bottom: 4px; right: 4px;
+  background: var(--ink); color: var(--ground);
+  width: 18px; height: 18px; border-radius: 50%;
+  font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700;
+  z-index: 2;
+}
+.slot.drag-over { border-color: var(--accent); transform: scale(1.06); }
+
+footer {
+  padding: 10px 18px; border-top: 1px solid var(--hairline);
+  display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+  background: color-mix(in oklab, var(--ground) 94%, transparent);
+}
+button.action {
+  background: transparent; border: 1px solid var(--hairline); color: var(--ink);
+  padding: 9px 18px; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  border-radius: 999px; cursor: pointer; font-family: var(--font-ui);
+  transition: all 0.15s var(--ease);
+}
+button.action:hover { background: color-mix(in oklab, var(--ground) 80%, #000 6%); }
+button.action.primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+button.action.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+
+.hint { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; margin-top: 8px; line-height: 1.6; }
+.hint kbd { background: var(--hairline); padding: 1px 5px; border-radius: 2px; font-family: 'SF Mono', monospace; font-size: 9px; color: var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="wordmark"><em>El Azteca</em> · Feed Scheduler</div>
+    <div class="kicker">Today → Aug 31 · Tue/Wed slots · Drag to swap</div>
+  </div>
+  <div class="stats">
+    <span>Slots<b id="sSlots">0</b></span>
+    <span>Filled<b id="sFilled">0</b></span>
+    <span>Accepted<b id="sAccepted">0</b></span>
+    <span>Rejected<b id="sRejected">0</b></span>
+    <span>Pool<b id="sPool">0</b></span>
+  </div>
+</header>
+
+<main>
+  <div class="pane">
+    <h3>Content pool</h3>
+    <div class="meta">Drag into feed</div>
+    <div class="pool-tabs">
+      <button class="active" data-tab="all">All <span id="tAll">0</span></button>
+      <button data-tab="new">New <span id="tNew">0</span></button>
+      <button data-tab="picks">Picks <span id="tPicks">0</span></button>
+    </div>
+    <div class="pool" id="pool"></div>
+    <div class="hint">
+      <kbd>drag</kbd> pool → slot replaces it<br>
+      <kbd>drag</kbd> slot → slot swaps<br>
+      <kbd>click</kbd> slot cycles status<br>
+      <kbd>right-click</kbd> slot marks carousel<br>
+      <kbd>Export</kbd> when ready
+    </div>
+  </div>
+
+  <div class="pane">
+    <h3>Feed · most recent top</h3>
+    <div class="meta">IG 3-col preview · 74 Tue/Wed slots</div>
+    <div class="feed-wrap"><div class="feed" id="feed"></div></div>
+  </div>
+</main>
+
+<footer>
+  <button class="action" onclick="resetSession()">Reset session</button>
+  <button class="action" onclick="clearStatuses()">Clear statuses</button>
+  <button class="action primary" onclick="exportFeed()">Export feed.json</button>
+</footer>
+
+<script>
+const INITIAL_SLOTS = [{"date": "2026-04-24", "dow": "Fri", "time": "17:00", "post": {"id": "sched_4", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/c_fill,ar_4:5,g_auto/v1776182553/AZ-47_gijit6.jpg", "caption": "Cocktail hour. \ud83c\udf3a\n\nHibiscus and spice. Two glasses, two moods.\nWhich one are you?\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Cocktail hour. \ud83c\udf3a", "original_date": "2026-04-24 5:30 pm", "status": "accepted"}}, {"date": "2026-04-27", "dow": "Mon", "time": "17:00", "post": {"id": "sched_6", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182550/AZ-37_xgfyqs.jpg", "caption": "Whole Fried Tilapia. \ud83d\udc20\n\nCrispy outside. Tender inside. Bone-in and proud of it.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Whole Fried Tilapia. \ud83d\udc20", "original_date": "2026-04-27 5:00 pm", "status": "accepted"}}, {"date": "2026-04-28", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-001", "source": "bulk", "batch": "BULK-001", "url": "nano_banana/azteca/BULK-001/variation_1.png", "caption": "Carne Asada\nClassic for a reason.", "caption_preview": "Carne Asada", "status": "pending"}}, {"date": "2026-04-30", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-002", "source": "bulk", "batch": "BULK-002", "url": "nano_banana/azteca/BULK-002/variation_1.png", "caption": "Carne Asada\nGrilled over fire.", "caption_preview": "Carne Asada", "status": "pending"}}, {"date": "2026-05-01", "dow": "Fri", "time": "17:00", "post": {"id": "sched_10", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182589/AZ-97_na3i2l.jpg", "caption": "Flan. \ud83c\udf6e\n\nCaramel custard, unmolded and perfect.\nThe one dessert that needs no introduction.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Flan. \ud83c\udf6e", "original_date": "2026-05-01 5:30 pm", "status": "accepted"}}, {"date": "2026-05-04", "dow": "Mon", "time": "17:00", "post": {"id": "sched_14", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182576/AZ-73_thiefo.jpg", "caption": "Pick your poison. \ud83c\udf79\n\nThree handcrafted cocktails. One table. No wrong choice.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Pick your poison. \ud83c\udf79", "original_date": "2026-05-04 5:00 pm", "status": "accepted"}}, {"date": "2026-05-05", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-003", "source": "bulk", "batch": "BULK-003", "url": "nano_banana/azteca/BULK-003/variation_1.png", "caption": "Chocolate Lava Cake\nWarm center.", "caption_preview": "Chocolate Lava Cake", "status": "pending"}}, {"date": "2026-05-07", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-004", "source": "bulk", "batch": "BULK-004", "url": "nano_banana/azteca/BULK-004/variation_1.png", "caption": "Family Style. No Apologies.\nTables are bigger than they look.", "caption_preview": "Family Style. No Apologies.", "status": "pending"}}, {"date": "2026-05-08", "dow": "Fri", "time": "17:00", "post": {"id": "sched_15", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182535/AZ-22_eyjfm3.jpg", "caption": "C\u00f3ctel de Camar\u00f3n. \ud83c\udf64\n\nTwenty shrimp. Azteca sauce. Avocado. You're welcome.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "C\u00f3ctel de Camar\u00f3n. \ud83c\udf64", "original_date": "2026-05-08 5:30 pm", "status": "accepted"}}, {"date": "2026-05-11", "dow": "Mon", "time": "17:00", "post": {"id": "sched_20", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182587/AZ-91_au7j8y.jpg", "caption": "Churros. \ud83c\udf69\n\nFour sauces. No sharing required.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Churros. \ud83c\udf69", "original_date": "2026-05-11 5:00 pm", "status": "accepted"}}, {"date": "2026-05-12", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-005", "source": "bulk", "batch": "BULK-005", "url": "nano_banana/azteca/BULK-005/variation_1.png", "caption": "Churros\nHot sugar. Dip and go.", "caption_preview": "Churros", "status": "pending"}}, {"date": "2026-05-14", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-006", "source": "bulk", "batch": "BULK-006", "url": "nano_banana/azteca/BULK-006/variation_1.png", "caption": "Baja Burrito\nHand-held. Hot. Honest.", "caption_preview": "Baja Burrito", "status": "pending"}}, {"date": "2026-05-15", "dow": "Fri", "time": "17:00", "post": {"id": "sched_22", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182559/AZ-49_lmw8ce.jpg", "caption": "Carne Asada. \ud83e\udd69\n\nThin cut, marinated, grilled right. The classic for a reason.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Carne Asada. \ud83e\udd69", "original_date": "2026-05-15 5:30 pm", "status": "accepted"}}, {"date": "2026-05-18", "dow": "Mon", "time": "17:00", "post": {"id": "sched_25", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182574/AZ-68_kbgzmg.jpg", "caption": "Fajita Baked Potato. \ud83e\udd54\ud83e\udd69\n\nRibeye, bacon bits, cheese dip, and scallions loaded on top.\nWe don't do things halfway.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Fajita Baked Potato. \ud83e\udd54\ud83e\udd69", "original_date": "2026-05-18 5:00 pm", "status": "accepted"}}, {"date": "2026-05-19", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-007", "source": "bulk", "batch": "BULK-007", "url": "nano_banana/azteca/BULK-007/variation_1.png", "caption": "Octopus Guacamole\nNot your average appetizer.", "caption_preview": "Octopus Guacamole", "status": "pending"}}, {"date": "2026-05-21", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-008", "source": "bulk", "batch": "BULK-008", "url": "nano_banana/azteca/BULK-008/variation_1.png", "caption": "Whole Fried Tilapia\nWhole fish. Whole flavor.", "caption_preview": "Whole Fried Tilapia", "status": "pending"}}, {"date": "2026-05-22", "dow": "Fri", "time": "17:00", "post": {"id": "sched_29", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182592/AZ-103_lln4yy.jpg", "caption": "Tres Leches. \ud83c\udf70\n\nSoaked. Topped with cream. Finished with a dehydrated orange.\nThe sweetest ending.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Tres Leches. \ud83c\udf70", "original_date": "2026-05-22 5:30 pm", "status": "accepted"}}, {"date": "2026-05-25", "dow": "Mon", "time": "17:00", "post": {"id": "sched_30", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182587/AZ-86_revkcr.jpg", "caption": "Huevos Rancheros. \ud83c\udf73\n\nEggs over easy, red ranchero sauce, rice and beans.\nThe breakfast that means business.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Huevos Rancheros. \ud83c\udf73", "original_date": "2026-05-25 5:00 pm", "status": "accepted"}}, {"date": "2026-05-26", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-009", "source": "bulk", "batch": "BULK-009", "url": "nano_banana/azteca/BULK-009/variation_1.png", "caption": "Fried Ice Cream\nCold inside. Warm outside.", "caption_preview": "Fried Ice Cream", "status": "pending"}}, {"date": "2026-05-28", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-010", "source": "bulk", "batch": "BULK-010", "url": "nano_banana/azteca/BULK-010/variation_1.png", "caption": "Cocktail hour.\nMargaritas \u00b7 Micheladas \u00b7 Pick your poison", "caption_preview": "Cocktail hour.", "status": "pending"}}, {"date": "2026-05-29", "dow": "Fri", "time": "17:00", "post": {"id": "sched_33", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182542/AZ-32_xesq2k.jpg", "caption": "Tilapia a la Mexicana. \ud83d\udc1f\n\nGrilled with onions and tomatoes. Served with all the fixings.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Tilapia a la Mexicana. \ud83d\udc1f", "original_date": "2026-05-29 5:30 pm", "status": "accepted"}}, {"date": "2026-06-01", "dow": "Mon", "time": "17:00", "post": {"id": "sched_36", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182591/AZ-102_fvg7zn.jpg", "caption": "Fried Ice Cream. \ud83c\udf66\n\nIce cream, chocolate, and a bu\u00f1uelo on the side.\nOld school. Still perfect.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Fried Ice Cream. \ud83c\udf66", "original_date": "2026-06-01 5:00 pm", "status": "accepted"}}, {"date": "2026-06-02", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-011", "source": "bulk", "batch": "BULK-011", "url": "nano_banana/azteca/BULK-011/variation_1.png", "caption": "Pick your poison.\nHappy Hour \u00b7 All week", "caption_preview": "Pick your poison.", "status": "pending"}}, {"date": "2026-06-04", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-012", "source": "bulk", "batch": "BULK-012", "url": "nano_banana/azteca/BULK-012/variation_1.png", "caption": "Cocktail hour.\nMargaritas \u00b7 Micheladas \u00b7 Pick your poison", "caption_preview": "Cocktail hour.", "status": "pending"}}, {"date": "2026-06-05", "dow": "Fri", "time": "17:00", "post": {"id": "sched_37", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182579/AZ-80_zvsyhs.jpg", "caption": "Steak and Enchilada Combo. \ud83c\udf73\ud83e\udd69\n\nCarne asada, red enchilada, and a fried egg holding it all together.\nThis is the one.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Steak and Enchilada Combo. \ud83c\udf73\ud83e\udd69", "original_date": "2026-06-05 5:30 pm", "status": "accepted"}}, {"date": "2026-06-08", "dow": "Mon", "time": "17:00", "post": {"id": "sched_39", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182572/AZ-64_wvdrnx.jpg", "caption": "Elote. \ud83c\udf3d\n\nCrema. Cotija. Taj\u00edn. On a stick.\nStreet food done right.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Elote. \ud83c\udf3d", "original_date": "2026-06-08 5:00 pm", "status": "accepted"}}, {"date": "2026-06-09", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-013", "source": "bulk", "batch": "BULK-013", "url": "nano_banana/azteca/BULK-013/variation_1.png", "caption": "La comida es amor.\nEl Azteca", "caption_preview": "La comida es amor.", "status": "pending"}}, {"date": "2026-06-11", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-014", "source": "bulk", "batch": "BULK-014", "url": "nano_banana/azteca/BULK-014/variation_1.png", "caption": "Aut\u00e9ntico.\nEl Azteca \u00b7 Camden \u00b7 Dover \u00b7 Rehoboth", "caption_preview": "Aut\u00e9ntico.", "status": "pending"}}, {"date": "2026-06-12", "dow": "Fri", "time": "17:00", "post": {"id": "sched_40", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182591/AZ-101_vml9bk.jpg", "caption": "Dessert menu. \ud83c\udf6e\ud83c\udf66\ud83c\udf6b\n\nFlan. Fried ice cream. Lava cake.\nJust pick one. (Or don't.)\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Dessert menu. \ud83c\udf6e\ud83c\udf66\ud83c\udf6b", "original_date": "2026-06-12 5:30 pm", "status": "accepted"}}, {"date": "2026-06-15", "dow": "Mon", "time": "17:00", "post": {"id": "sched_41", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182585/AZ-82_onz2fq.jpg", "caption": "Baja Burrito. \ud83c\udf2f\n\nStuffed with rice, lettuce, pico, cheese, avocado, and Baja Sauce.\nPlus fries, because why not.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Baja Burrito. \ud83c\udf2f", "original_date": "2026-06-15 5:00 pm", "status": "accepted"}}, {"date": "2026-06-16", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-015", "source": "bulk", "batch": "BULK-015", "url": "nano_banana/azteca/BULK-015/variation_1.png", "caption": "Con gusto.\nEl Azteca \u00b7 Camden \u00b7 Dover \u00b7 Rehoboth", "caption_preview": "Con gusto.", "status": "pending"}}, {"date": "2026-06-18", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-016", "source": "bulk", "batch": "BULK-016", "url": "nano_banana/azteca/BULK-016/variation_1.png", "caption": "Taco Tuesday.\nEvery Tuesday", "caption_preview": "Taco Tuesday.", "status": "pending"}}, {"date": "2026-06-19", "dow": "Fri", "time": "17:00", "post": {"id": "sched_45", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182577/AZ-72_duehae.jpg", "caption": "Family style. No apologies. \ud83c\udf7d\ufe0f\n\nPull up a chair. There's room for everyone.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Family style. No apologies. \ud83c\udf7d\ufe0f", "original_date": "2026-06-19 5:30 pm", "status": "accepted"}}, {"date": "2026-06-22", "dow": "Mon", "time": "17:00", "post": {"id": "sched_46", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182528/AZ-15_f2izn4.jpg", "caption": "Homestyle Bacon Jalape\u00f1os. \ud83c\udf36\ufe0f\n\nStuffed, wrapped, grilled. Drizzled in Drunk Sauce.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Homestyle Bacon Jalape\u00f1os. \ud83c\udf36\ufe0f", "original_date": "2026-06-22 5:00 pm", "status": "accepted"}}, {"date": "2026-06-23", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-017", "source": "bulk", "batch": "BULK-017", "url": "nano_banana/azteca/BULK-017/variation_1.png", "caption": "Kids Eat Free.\nSunday nights \u00b7 One kid per adult", "caption_preview": "Kids Eat Free.", "status": "pending"}}, {"date": "2026-06-25", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-018", "source": "bulk", "batch": "BULK-018", "url": "nano_banana/azteca/BULK-018/variation_1.png", "caption": "Margarita Monday.\nHouse margaritas \u00b7 $ deals", "caption_preview": "Margarita Monday.", "status": "pending"}}, {"date": "2026-06-26", "dow": "Fri", "time": "17:00", "post": {"id": "sched_48", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182531/AZ-20_clpmqw.jpg", "caption": "The whole table is eating. \ud83c\udf7d\ufe0f\n\nAppetizers, mains, cocktails \u2014 this is how we do it.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "The whole table is eating. \ud83c\udf7d\ufe0f", "original_date": "2026-06-26 5:30 pm", "status": "accepted"}}, {"date": "2026-06-29", "dow": "Mon", "time": "17:00", "post": {"id": "sched_49", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182556/AZ-46_cfbiiv.jpg", "caption": "Bring the crew. \ud83d\udd25\n\nWhen one dish isn't enough. (It never is.)\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Bring the crew. \ud83d\udd25", "original_date": "2026-06-29 5:00 pm", "status": "accepted"}}, {"date": "2026-06-30", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-019", "source": "bulk", "batch": "BULK-019", "url": "nano_banana/azteca/BULK-019/variation_1.png", "caption": "Mother's Day.\nReserve ahead", "caption_preview": "Mother's Day.", "status": "pending"}}, {"date": "2026-07-02", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-020", "source": "bulk", "batch": "BULK-020", "url": "nano_banana/azteca/BULK-020/variation_1.png", "caption": "El men\u00fa.\nCl\u00e1sicos \u00b7 Favoritos \u00b7 De la casa", "caption_preview": "El men\u00fa.", "status": "pending"}}, {"date": "2026-07-03", "dow": "Fri", "time": "17:00", "post": {"id": "sched_50", "source": "scheduled", "url": "https://res.cloudinary.com/dkp42tunc/image/upload/v1776182549/AZ-41_blajgc.jpg", "caption": "Alambres. \ud83e\udd69\ud83d\udd25\n\nSteak, chicken, scallop, shrimp \u2014 all on the skewer.\n\nFind your nearest location | link in bio \ud83d\udccd", "caption_preview": "Alambres. \ud83e\udd69\ud83d\udd25", "original_date": "2026-07-03 5:30 pm", "status": "accepted"}}, {"date": "2026-07-06", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-07-07", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-021", "source": "bulk", "batch": "BULK-021", "url": "nano_banana/azteca/BULK-021/variation_1.png", "caption": "Family Style.\nAlways room at the table.", "caption_preview": "Family Style.", "status": "pending"}}, {"date": "2026-07-09", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-022", "source": "bulk", "batch": "BULK-022", "url": "nano_banana/azteca/BULK-022/variation_1.png", "caption": "Reservaciones.\nBook ahead \u00b7 link in bio", "caption_preview": "Reservaciones.", "status": "pending"}}, {"date": "2026-07-10", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-07-13", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-07-14", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-023", "source": "bulk", "batch": "BULK-023", "url": "nano_banana/azteca/BULK-023/variation_1.png", "caption": "Abierto.\nMon\u2013Sun \u00b7 11am\u201310pm", "caption_preview": "Abierto.", "status": "pending"}}, {"date": "2026-07-16", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-024", "source": "bulk", "batch": "BULK-024", "url": "nano_banana/azteca/BULK-024/variation_1.png", "caption": "Del bar.\nMargaritas \u00b7 Micheladas \u00b7 Aguas Frescas", "caption_preview": "Del bar.", "status": "pending"}}, {"date": "2026-07-17", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-07-20", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-07-21", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-025", "source": "bulk", "batch": "BULK-025", "url": "nano_banana/azteca/BULK-025/variation_1.png", "caption": "Favorites.\nTacos \u00b7 Enchiladas \u00b7 Fajitas \u00b7 Burritos", "caption_preview": "Favorites.", "status": "pending"}}, {"date": "2026-07-23", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-026", "source": "bulk", "batch": "BULK-026", "url": "nano_banana/azteca/BULK-026/variation_1.png", "caption": "La sobremesa.\nThe moment after the meal. Stay longer.", "caption_preview": "La sobremesa.", "status": "pending"}}, {"date": "2026-07-24", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-07-27", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-07-28", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-027", "source": "bulk", "batch": "BULK-027", "url": "nano_banana/azteca/BULK-027/variation_1.png", "caption": "El ma\u00edz es todo.\nCorn is everything. Start there.", "caption_preview": "El ma\u00edz es todo.", "status": "pending"}}, {"date": "2026-07-30", "dow": "Thu", "time": "17:00", "post": {"id": "bulk_BULK-028", "source": "bulk", "batch": "BULK-028", "url": "nano_banana/azteca/BULK-028/variation_1.png", "caption": "Brunch.\nHuevos Rancheros \u00b7 Chilaquiles \u00b7 Breakfast Enchiladas", "caption_preview": "Brunch.", "status": "pending"}}, {"date": "2026-07-31", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-08-03", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-08-04", "dow": "Tue", "time": "17:00", "post": {"id": "bulk_BULK-029", "source": "bulk", "batch": "BULK-029", "url": "nano_banana/azteca/BULK-029/variation_1.png", "caption": "Del bar.\nMargaritas \u00b7 Micheladas \u00b7 Aguas Frescas", "caption_preview": "Del bar.", "status": "pending"}}, {"date": "2026-08-06", "dow": "Thu", "time": "17:00", "post": {"id": "pick_4s_BULK-001_V1", "source": "picks", "filename": "4s_BULK-001_V1.png", "url": "PICKS/azteca/4s_BULK-001_V1.png", "caption": "4s BULK-001 V1", "caption_preview": "4s_BULK-001_V1", "status": "accepted"}}, {"date": "2026-08-07", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-08-10", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-08-11", "dow": "Tue", "time": "17:00", "post": {"id": "pick_4s_BULK-002_V1", "source": "picks", "filename": "4s_BULK-002_V1.png", "url": "PICKS/azteca/4s_BULK-002_V1.png", "caption": "4s BULK-002 V1", "caption_preview": "4s_BULK-002_V1", "status": "accepted"}}, {"date": "2026-08-13", "dow": "Thu", "time": "17:00", "post": {"id": "pick_4s_BULK-003_V1", "source": "picks", "filename": "4s_BULK-003_V1.png", "url": "PICKS/azteca/4s_BULK-003_V1.png", "caption": "4s BULK-003 V1", "caption_preview": "4s_BULK-003_V1", "status": "accepted"}}, {"date": "2026-08-14", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-08-17", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-08-18", "dow": "Tue", "time": "17:00", "post": {"id": "pick_4s_BULK-004_V1", "source": "picks", "filename": "4s_BULK-004_V1.png", "url": "PICKS/azteca/4s_BULK-004_V1.png", "caption": "4s BULK-004 V1", "caption_preview": "4s_BULK-004_V1", "status": "accepted"}}, {"date": "2026-08-20", "dow": "Thu", "time": "17:00", "post": {"id": "pick_4s_BULK-006_V1", "source": "picks", "filename": "4s_BULK-006_V1.png", "url": "PICKS/azteca/4s_BULK-006_V1.png", "caption": "4s BULK-006 V1", "caption_preview": "4s_BULK-006_V1", "status": "accepted"}}, {"date": "2026-08-21", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-08-24", "dow": "Mon", "time": "17:00", "post": null}, {"date": "2026-08-25", "dow": "Tue", "time": "17:00", "post": {"id": "pick_4s_BULK-007_V1", "source": "picks", "filename": "4s_BULK-007_V1.png", "url": "PICKS/azteca/4s_BULK-007_V1.png", "caption": "4s BULK-007 V1", "caption_preview": "4s_BULK-007_V1", "status": "accepted"}}, {"date": "2026-08-27", "dow": "Thu", "time": "17:00", "post": {"id": "pick_4s_BULK-008_V1", "source": "picks", "filename": "4s_BULK-008_V1.png", "url": "PICKS/azteca/4s_BULK-008_V1.png", "caption": "4s BULK-008 V1", "caption_preview": "4s_BULK-008_V1", "status": "accepted"}}, {"date": "2026-08-28", "dow": "Fri", "time": "17:00", "post": null}, {"date": "2026-08-31", "dow": "Mon", "time": "17:00", "post": null}];
+const INITIAL_POOL_NEW = [];
+const INITIAL_POOL_PICKS = [{"id": "pick_4s_BULK-009_V1", "source": "picks", "filename": "4s_BULK-009_V1.png", "url": "PICKS/azteca/4s_BULK-009_V1.png", "caption": "4s BULK-009 V1", "caption_preview": "4s_BULK-009_V1", "status": "accepted"}, {"id": "pick_4s_BULK-010_V1", "source": "picks", "filename": "4s_BULK-010_V1.png", "url": "PICKS/azteca/4s_BULK-010_V1.png", "caption": "4s BULK-010 V1", "caption_preview": "4s_BULK-010_V1", "status": "accepted"}, {"id": "pick_4s_BULK-011_V1", "source": "picks", "filename": "4s_BULK-011_V1.png", "url": "PICKS/azteca/4s_BULK-011_V1.png", "caption": "4s BULK-011 V1", "caption_preview": "4s_BULK-011_V1", "status": "accepted"}, {"id": "pick_4s_BULK-012_V1", "source": "picks", "filename": "4s_BULK-012_V1.png", "url": "PICKS/azteca/4s_BULK-012_V1.png", "caption": "4s BULK-012 V1", "caption_preview": "4s_BULK-012_V1", "status": "accepted"}, {"id": "pick_4s_BULK-013_V1", "source": "picks", "filename": "4s_BULK-013_V1.png", "url": "PICKS/azteca/4s_BULK-013_V1.png", "caption": "4s BULK-013 V1", "caption_preview": "4s_BULK-013_V1", "status": "accepted"}, {"id": "pick_4s_BULK-014_V1", "source": "picks", "filename": "4s_BULK-014_V1.png", "url": "PICKS/azteca/4s_BULK-014_V1.png", "caption": "4s BULK-014 V1", "caption_preview": "4s_BULK-014_V1", "status": "accepted"}, {"id": "pick_4s_BULK-015_V1", "source": "picks", "filename": "4s_BULK-015_V1.png", "url": "PICKS/azteca/4s_BULK-015_V1.png", "caption": "4s BULK-015 V1", "caption_preview": "4s_BULK-015_V1", "status": "accepted"}, {"id": "pick_4s_BULK-016_V1", "source": "picks", "filename": "4s_BULK-016_V1.png", "url": "PICKS/azteca/4s_BULK-016_V1.png", "caption": "4s BULK-016 V1", "caption_preview": "4s_BULK-016_V1", "status": "accepted"}, {"id": "pick_4s_BULK-018_V1", "source": "picks", "filename": "4s_BULK-018_V1.png", "url": "PICKS/azteca/4s_BULK-018_V1.png", "caption": "4s BULK-018 V1", "caption_preview": "4s_BULK-018_V1", "status": "accepted"}, {"id": "pick_4s_BULK-019_V1", "source": "picks", "filename": "4s_BULK-019_V1.png", "url": "PICKS/azteca/4s_BULK-019_V1.png", "caption": "4s BULK-019 V1", "caption_preview": "4s_BULK-019_V1", "status": "accepted"}, {"id": "pick_4s_BULK-020_V1", "source": "picks", "filename": "4s_BULK-020_V1.png", "url": "PICKS/azteca/4s_BULK-020_V1.png", "caption": "4s BULK-020 V1", "caption_preview": "4s_BULK-020_V1", "status": "accepted"}, {"id": "pick_4s_BULK-021_V1", "source": "picks", "filename": "4s_BULK-021_V1.png", "url": "PICKS/azteca/4s_BULK-021_V1.png", "caption": "4s BULK-021 V1", "caption_preview": "4s_BULK-021_V1", "status": "accepted"}, {"id": "pick_4s_BULK-022_V1", "source": "picks", "filename": "4s_BULK-022_V1.png", "url": "PICKS/azteca/4s_BULK-022_V1.png", "caption": "4s BULK-022 V1", "caption_preview": "4s_BULK-022_V1", "status": "accepted"}, {"id": "pick_4s_BULK-027_V1", "source": "picks", "filename": "4s_BULK-027_V1.png", "url": "PICKS/azteca/4s_BULK-027_V1.png", "caption": "4s BULK-027 V1", "caption_preview": "4s_BULK-027_V1", "status": "accepted"}, {"id": "pick_4s_BULK-029_V1", "source": "picks", "filename": "4s_BULK-029_V1.png", "url": "PICKS/azteca/4s_BULK-029_V1.png", "caption": "4s BULK-029 V1", "caption_preview": "4s_BULK-029_V1", "status": "accepted"}, {"id": "pick_4s_BULK-030_V1", "source": "picks", "filename": "4s_BULK-030_V1.png", "url": "PICKS/azteca/4s_BULK-030_V1.png", "caption": "4s BULK-030 V1", "caption_preview": "4s_BULK-030_V1", "status": "accepted"}, {"id": "pick_4s_BULK-037_V1", "source": "picks", "filename": "4s_BULK-037_V1.png", "url": "PICKS/azteca/4s_BULK-037_V1.png", "caption": "4s BULK-037 V1", "caption_preview": "4s_BULK-037_V1", "status": "accepted"}, {"id": "pick_4s_BULK-038_V1", "source": "picks", "filename": "4s_BULK-038_V1.png", "url": "PICKS/azteca/4s_BULK-038_V1.png", "caption": "4s BULK-038 V1", "caption_preview": "4s_BULK-038_V1", "status": "accepted"}, {"id": "pick_4s_BULK-039_V1", "source": "picks", "filename": "4s_BULK-039_V1.png", "url": "PICKS/azteca/4s_BULK-039_V1.png", "caption": "4s BULK-039 V1", "caption_preview": "4s_BULK-039_V1", "status": "accepted"}, {"id": "pick_4s_BULK-040_V1", "source": "picks", "filename": "4s_BULK-040_V1.png", "url": "PICKS/azteca/4s_BULK-040_V1.png", "caption": "4s BULK-040 V1", "caption_preview": "4s_BULK-040_V1", "status": "accepted"}, {"id": "pick_5s_BULK-021_V1", "source": "picks", "filename": "5s_BULK-021_V1.png", "url": "PICKS/azteca/5s_BULK-021_V1.png", "caption": "5s BULK-021 V1", "caption_preview": "5s_BULK-021_V1", "status": "accepted"}, {"id": "pick_5s_BULK-024_V1", "source": "picks", "filename": "5s_BULK-024_V1.png", "url": "PICKS/azteca/5s_BULK-024_V1.png", "caption": "5s BULK-024 V1", "caption_preview": "5s_BULK-024_V1", "status": "accepted"}];
+const BRAND = "azteca";
+const STORAGE_KEY = "feedv3_" + BRAND + "_" + INITIAL_SLOTS.length;
+
+let state = {
+  slots: [],          // [{date, dow, time, post: {...} | null}]
+  pool: [],           // unified content pool — everything not in a slot
+  activeTab: "all",
+};
+
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    state = JSON.parse(saved);
+  } else {
+    state.slots = JSON.parse(JSON.stringify(INITIAL_SLOTS));
+    state.pool = [...INITIAL_POOL_NEW, ...INITIAL_POOL_PICKS];
+  }
+} catch(e) {
+  state.slots = JSON.parse(JSON.stringify(INITIAL_SLOTS));
+  state.pool = [...INITIAL_POOL_NEW, ...INITIAL_POOL_PICKS];
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function resolveUrl(post) {
+  if (!post) return "";
+  if (post.url.startsWith("http")) return post.url;
+  return post.url;
+}
+
+function formatDate(isoDate, dow, time) {
+  const d = new Date(isoDate + "T00:00:00");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${dow.toUpperCase()} ${mm}-${dd}`;
+}
+
+function renderPool() {
+  const el = document.getElementById("pool");
+  // Filter pool by active tab
+  let filtered = state.pool;
+  if (state.activeTab === "new") filtered = state.pool.filter(p => p.source === "bulk");
+  else if (state.activeTab === "picks") filtered = state.pool.filter(p => p.source === "picks");
+  // Tab counts
+  const cNew = state.pool.filter(p => p.source === "bulk").length;
+  const cPicks = state.pool.filter(p => p.source === "picks").length;
+  document.getElementById("tAll").textContent = state.pool.length;
+  document.getElementById("tNew").textContent = cNew;
+  document.getElementById("tPicks").textContent = cPicks;
+  el.innerHTML = "";
+  filtered.forEach((post) => {
+    // Find real pool index so drop handlers can locate by identity
+    const realIdx = state.pool.indexOf(post);
+    const c = document.createElement("div");
+    c.className = "pool-card";
+    c.draggable = true;
+    c.dataset.source = "pool";
+    c.dataset.idx = realIdx;
+    c.innerHTML = `
+      <img src="${resolveUrl(post)}" loading="lazy">
+      <div class="info">
+        <div class="caption">${(post.caption_preview || "").replace(/</g, "&lt;")}</div>
+        <div class="tag">${post.source || "new"}</div>
+      </div>
+    `;
+    c.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", JSON.stringify({ from: "pool", idx: realIdx }));
+    });
+    el.appendChild(c);
+  });
+  document.getElementById("sPool").textContent = state.pool.length;
+}
+
+function renderFeed() {
+  const el = document.getElementById("feed");
+  el.innerHTML = "";
+  state.slots.forEach((slot, idx) => {
+    const div = document.createElement("div");
+    div.className = "slot";
+    div.dataset.idx = idx;
+    if (slot.post) {
+      div.classList.add("status-" + (slot.post.status || "accepted"));
+      if (slot.post.carousel) div.classList.add("carousel");
+      div.innerHTML = `
+        <img src="${resolveUrl(slot.post)}" loading="lazy">
+        <div class="date-badge">${formatDate(slot.date, slot.dow, slot.time)}</div>
+        ${slot.post.source && slot.post.source !== "scheduled" ? '<div class="source-badge">' + slot.post.source.toUpperCase() + '</div>' : ""}
+      `;
+      div.draggable = true;
+      div.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ from: "slot", idx }));
+      });
+      div.addEventListener("click", (e) => {
+        if (!slot.post) return;
+        const next = { accepted: "rejected", rejected: "pending", pending: "accepted" };
+        state.slots[idx].post.status = next[state.slots[idx].post.status || "accepted"];
+        save();
+        renderFeed();
+      });
+      div.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (!slot.post) return;
+        state.slots[idx].post.carousel = !state.slots[idx].post.carousel;
+        save();
+        renderFeed();
+      });
+    } else {
+      div.classList.add("empty");
+      div.innerHTML = `<div class="date-badge">${formatDate(slot.date, slot.dow, slot.time)}</div>`;
+    }
+    div.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      div.classList.add("drag-over");
+    });
+    div.addEventListener("dragleave", () => div.classList.remove("drag-over"));
+    div.addEventListener("drop", (e) => {
+      e.preventDefault();
+      div.classList.remove("drag-over");
+      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+      handleDrop(data, idx);
+    });
+    el.appendChild(div);
+  });
+  updateStats();
+}
+
+function handleDrop(drag, targetIdx) {
+  if (drag.from === "pool") {
+    const post = state.pool[drag.idx];
+    if (!post) return;
+    // Remove from pool
+    state.pool.splice(drag.idx, 1);
+    // Evict target slot's current post BACK to pool (top)
+    const evicted = state.slots[targetIdx].post;
+    if (evicted) state.pool.unshift(evicted);
+    // Place new post in slot
+    state.slots[targetIdx].post = post;
+    post.status = post.status || "pending";
+  } else if (drag.from === "slot") {
+    if (drag.idx === targetIdx) return;
+    // SWAP the two slot posts (dates stay)
+    const a = state.slots[drag.idx].post;
+    const b = state.slots[targetIdx].post;
+    state.slots[drag.idx].post = b;
+    state.slots[targetIdx].post = a;
+  }
+  save();
+  renderFeed();
+  renderPool();
+}
+
+function updateStats() {
+  let filled = 0, accepted = 0, rejected = 0;
+  state.slots.forEach(s => {
+    if (s.post) {
+      filled++;
+      const st = s.post.status || "accepted";
+      if (st === "accepted") accepted++;
+      else if (st === "rejected") rejected++;
+    }
+  });
+  document.getElementById("sSlots").textContent = state.slots.length;
+  document.getElementById("sFilled").textContent = filled;
+  document.getElementById("sAccepted").textContent = accepted;
+  document.getElementById("sRejected").textContent = rejected;
+}
+
+function resetSession() {
+  if (!confirm("Reset entire session? All status + swap changes will be lost.")) return;
+  state.slots = JSON.parse(JSON.stringify(INITIAL_SLOTS));
+  state.pool = [...INITIAL_POOL_NEW, ...INITIAL_POOL_PICKS];
+  save();
+  renderAll();
+}
+
+function clearStatuses() {
+  state.slots.forEach(s => {
+    if (s.post && s.post.source !== "scheduled") s.post.status = "pending";
+  });
+  save();
+  renderFeed();
+}
+
+function exportFeed() {
+  const payload = {
+    brand: BRAND,
+    exported_at: new Date().toISOString(),
+    slot_count: state.slots.length,
+    slots: state.slots.map(s => ({
+      date: s.date,
+      dow: s.dow,
+      time: s.time,
+      scheduled_at: s.date + " " + s.time,
+      post: s.post ? {
+        source: s.post.source,
+        id: s.post.id,
+        url: s.post.url,
+        caption: s.post.caption,
+        caption_preview: s.post.caption_preview,
+        batch: s.post.batch || null,
+        filename: s.post.filename || null,
+        status: s.post.status || "accepted",
+        carousel: !!s.post.carousel,
+      } : null,
+    })),
+    pool_remaining: state.pool,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "feed_" + BRAND + "_" + Date.now() + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll(".pool-tabs button").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+  renderPool();
+}
+
+function renderAll() {
+  renderFeed();
+  renderPool();
+}
+
+document.querySelectorAll(".pool-tabs button").forEach(b => {
+  b.addEventListener("click", () => switchTab(b.dataset.tab));
+});
+
+renderAll();
+</script>
+</body>
+</html>
