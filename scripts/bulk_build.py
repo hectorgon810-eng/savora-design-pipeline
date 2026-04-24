@@ -1014,6 +1014,9 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Print configs, do not call API")
     parser.add_argument("--avant", action="store_true",
                         help="AVANT-GARDE mode — replaces standard angles with rule-breaking experimental angles")
+    parser.add_argument("--location", choices=["camden", "dover", "rehoboth"],
+                        help="AZ-only: restrict asset pool to dishes confirmed at this specific location. "
+                             "Use when Camden/Dover/Rehoboth menus differ to prevent cross-location content leaks.")
     args = parser.parse_args()
 
     brands = list(BRAND_PLANS.keys()) if args.brand == "all" else [args.brand]
