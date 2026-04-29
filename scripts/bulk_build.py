@@ -29,6 +29,19 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RUNNER = ROOT / "scripts" / "nano_banana_runner.py"
 
+from generation_guards import (
+    OutputCollisionError,
+    VALID_INTENTS,
+    assert_intent_valid,
+    assert_output_dir_safe,
+    assert_post_id_safe,
+)
+
+
+def load_cloudinary_urls() -> dict:
+    path = ROOT / "cloudinary_urls.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
 
 # ============================================================
 # ASSET INVENTORIES (pulled from real CSVs + brand profiles)
@@ -971,7 +984,7 @@ def build_post_configs(brand: str, target_count: int, avant: bool = False) -> li
 # DISPATCHER
 # ============================================================
 
-def run_one(cfg: dict) -> tuple[str, bool, str]:
+def run_one(cfg: dict, intent: str) -> tuple[str, bool, str]:
     """Call nano_banana_runner as a subprocess."""
     cmd = [
         "python3", str(RUNNER),
@@ -986,6 +999,7 @@ def run_one(cfg: dict) -> tuple[str, bool, str]:
         "--parallel", "1",
         "--aspect", "4:5",
         "--backend", "openai",
+        "--intent", intent,
     ]
     if cfg.get("image_key"):
         cmd += ["--image-key", cfg["image_key"]]
@@ -1012,12 +1026,17 @@ def main() -> None:
     parser.add_argument("--count", type=int, default=100)
     parser.add_argument("--parallel", type=int, default=8, help="Concurrent OpenAI calls")
     parser.add_argument("--dry-run", action="store_true", help="Print configs, do not call API")
+    parser.add_argument("--intent", required=True, choices=sorted(VALID_INTENTS), help="Why this batch is being generated.")
     parser.add_argument("--avant", action="store_true",
                         help="AVANT-GARDE mode — replaces standard angles with rule-breaking experimental angles")
     parser.add_argument("--location", choices=["camden", "dover", "rehoboth"],
                         help="AZ-only: restrict asset pool to dishes confirmed at this specific location. "
                              "Use when Camden/Dover/Rehoboth menus differ to prevent cross-location content leaks.")
     args = parser.parse_args()
+    try:
+        assert_intent_valid(args.intent)
+    except Exception as exc:  # noqa: BLE001
+        sys.exit(str(exc))
 
     brands = list(BRAND_PLANS.keys()) if args.brand == "all" else [args.brand]
 
@@ -1033,6 +1052,14 @@ def main() -> None:
         print(f"[{b}] {len(configs)} configs planned")
         all_configs.extend(configs)
 
+    urls = load_cloudinary_urls()
+    try:
+        for cfg in all_configs:
+            assert_post_id_safe(cfg["post_id"], urls)
+            assert_output_dir_safe(ROOT / "OUTPUT" / "nano_banana" / cfg["brand"] / cfg["post_id"], urls)
+    except OutputCollisionError as exc:
+        sys.exit(str(exc))
+
     if args.dry_run:
         for c in all_configs[:5]:
             print(c)
@@ -1045,7 +1072,7 @@ def main() -> None:
     failed = []
 
     with cf.ThreadPoolExecutor(max_workers=args.parallel) as ex:
-        futures = {ex.submit(run_one, c): c for c in all_configs}
+        futures = {ex.submit(run_one, c, args.intent): c for c in all_configs}
         for fut in cf.as_completed(futures):
             post_id, ok, tail = fut.result()
             completed += 1

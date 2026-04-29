@@ -1,0 +1,1443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Savora Composer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ RESET ============ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { line-height: 1.4; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  img { display: block; max-width: 100%; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input, select, textarea { font: inherit; color: inherit; }
+
+  /* ============ DESIGN TOKENS ============ */
+  :root {
+    /* surfaces */
+    --bg-base: #0c0b0a;
+    --bg-raised: #14120f;
+    --bg-sunken: #0a0908;
+    --surface: #181612;
+    --surface-2: #221f19;
+
+    /* ink */
+    --ink-strong: #efe6d4;
+    --ink: #d8cfb8;
+    --ink-soft: #98897a;
+    --ink-faint: #5d544a;
+
+    /* lines */
+    --line: rgba(255,255,255,0.06);
+    --line-strong: rgba(255,255,255,0.14);
+
+    /* type */
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+    /* motion */
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-fast: 120ms;
+    --dur: 220ms;
+    --dur-slow: 380ms;
+
+    /* accent — overridden per-brand */
+    --accent: #c9a24b;
+    --accent-soft: rgba(201, 162, 75, 0.14);
+    --accent-strong: rgba(201, 162, 75, 0.34);
+
+    /* signal */
+    --signal-pick: #6cab64;
+    --signal-reject: #d96a6a;
+    --signal-info: #5b8eb5;
+
+    /* shadow (tinted, not neon) */
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.22), 0 6px 18px rgba(0,0,0,0.18);
+    --shadow-2: 0 4px 14px rgba(0,0,0,0.3), 0 24px 60px rgba(0,0,0,0.24);
+  }
+  body[data-brand="blue_mezcal"]   { --accent: #f2a900; --accent-soft: rgba(242,169,0,0.16); --accent-strong: rgba(242,169,0,0.36); }
+  body[data-brand="jackson_house"] { --accent: #c9a24b; --accent-soft: rgba(201,162,75,0.14); --accent-strong: rgba(201,162,75,0.34); }
+  body[data-brand="azteca"]        { --accent: #ff5ba7; --accent-soft: rgba(255,91,167,0.14); --accent-strong: rgba(255,91,167,0.34); }
+
+  html, body {
+    background: var(--bg-base);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ============ APP SHELL ============ */
+  .app {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    height: 100vh;
+    width: 100%;
+  }
+
+  /* ===== Top bar ===== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px 14px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+  }
+  .wordmark {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.015em;
+    color: var(--ink-strong);
+  }
+  .wordmark em { font-style: italic; font-weight: 400; }
+  .wordmark .div { margin: 0 10px; color: var(--ink-faint); font-style: normal; font-weight: 300; }
+  .wordmark .ws { color: var(--accent); font-style: italic; font-weight: 500; }
+  .wordmark-tag {
+    margin-top: 4px;
+    font-size: 9.5px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .save-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .save-state .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--signal-pick);
+    box-shadow: 0 0 0 3px rgba(108,171,100,0.18);
+  }
+
+  /* ===== Brand tabs ===== */
+  .brand-tabs {
+    display: flex;
+    align-items: stretch;
+    padding: 0 22px;
+    border-bottom: 1px solid var(--line);
+    gap: 4px;
+  }
+  .brand-tab {
+    position: relative;
+    padding: 14px 22px 16px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 2px solid transparent;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+    will-change: transform;
+  }
+  .brand-tab .num {
+    margin-left: 10px;
+    font-family: var(--serif);
+    font-size: 16px;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    text-transform: none;
+  }
+  .brand-tab:hover { color: var(--ink-strong); }
+  .brand-tab[aria-pressed="true"] {
+    color: var(--ink-strong);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ===== Workspace tabs ===== */
+  .ws-tabs {
+    display: flex;
+    align-items: stretch;
+    padding: 0 26px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-sunken);
+    gap: 0;
+  }
+  .ws-tab {
+    padding: 11px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 2px solid transparent;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  .ws-tab:hover { color: var(--ink); }
+  .ws-tab[aria-pressed="true"] {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ===== Workspace body ===== */
+  .ws-body { overflow: hidden; min-height: 0; }
+
+  /* ============ POOL VIEW ============ */
+  .pool {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* ----- Generator rail ----- */
+  .gen-rail {
+    border-right: 1px solid var(--line);
+    background: var(--bg-sunken);
+    overflow-y: auto;
+    padding: 26px 22px 32px;
+  }
+  .gen-rail h2 {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 500;
+    font-style: italic;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink-strong);
+  }
+  .gen-rail .eyebrow {
+    margin-top: 6px;
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .gen-section { margin-top: 26px; }
+  .gen-label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .gen-input,
+  .gen-textarea,
+  .gen-select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 11px 13px;
+    font-size: 13px;
+    color: var(--ink-strong);
+    font-family: var(--sans);
+    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+    outline: 0;
+  }
+  .gen-input::placeholder { color: var(--ink-faint); }
+  .gen-input:focus,
+  .gen-textarea:focus,
+  .gen-select:focus {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+
+  /* format checkboxes */
+  .fmt-list {
+    display: grid;
+    gap: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .fmt-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--ink);
+    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .fmt-row:hover { border-color: var(--line-strong); color: var(--ink-strong); }
+  .fmt-row input { accent-color: var(--accent); }
+  .fmt-row input:checked + span { color: var(--ink-strong); font-weight: 500; }
+  .fmt-row:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* batch slider */
+  .batch-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .gen-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--line-strong);
+    border-radius: 2px;
+    outline: 0;
+    accent-color: var(--accent);
+  }
+  .gen-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .gen-range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .batch-num {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--accent);
+    min-width: 44px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .split-note {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .split-note b { color: var(--accent); font-weight: 600; }
+
+  /* cost row */
+  .cost-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-top: 18px;
+  }
+  .cost-row .k {
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+  .cost-row .v {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--ink-strong);
+  }
+
+  /* primary CTA */
+  .gen-btn {
+    width: 100%;
+    margin-top: 18px;
+    padding: 15px 20px;
+    background: var(--accent);
+    color: var(--bg-base);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    transition: transform var(--dur-fast) var(--ease), filter var(--dur) var(--ease);
+    will-change: transform;
+  }
+  .gen-btn:hover { filter: brightness(1.1); }
+  .gen-btn:active { transform: translateY(1px) scale(0.99); }
+  .gen-btn:disabled {
+    background: var(--surface);
+    color: var(--ink-faint);
+    cursor: not-allowed;
+    filter: none;
+  }
+
+  .job-card {
+    display: none;
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .job-card.show { display: block; }
+  .job-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .job-line .label { color: var(--ink); }
+  .job-track {
+    width: 100%;
+    height: 3px;
+    background: var(--line-strong);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .job-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width var(--dur-slow) var(--ease);
+  }
+
+  /* ----- Pool main area ----- */
+  .pool-main {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .pool-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 700;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .chip:hover { color: var(--ink); border-color: var(--line-strong); }
+  .chip[aria-pressed="true"] {
+    color: var(--bg-base);
+    background: var(--ink-strong);
+    border-color: var(--ink-strong);
+  }
+  .chip .ct {
+    margin-left: 6px;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .chip[aria-pressed="true"] .ct { color: var(--bg-base); opacity: 0.65; }
+
+  .toolbar-spacer { flex: 1; }
+  .search-input {
+    width: 240px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--ink-strong);
+    font-family: var(--sans);
+    outline: 0;
+    transition: border-color var(--dur) var(--ease);
+  }
+  .search-input::placeholder { color: var(--ink-faint); }
+  .search-input:focus { border-color: var(--accent); }
+  .reload-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 700;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  .reload-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ============ CARD GRID — bulletproof ============ */
+  .grid-wrap {
+    overflow-y: auto;
+    padding: 20px 24px 32px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  /* Card: PURE BLOCK, NO FLEX, EXPLICIT HEIGHTS — cannot collapse */
+  .card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    will-change: transform;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-1);
+  }
+  .card[data-state="picked"]   { border-color: var(--signal-pick); box-shadow: 0 0 0 1px var(--signal-pick); }
+  .card[data-state="rejected"] { opacity: 0.42; border-color: var(--signal-reject); }
+
+  /* The visual: <div> with background-image, EXPLICIT HEIGHT — no aspect-ratio */
+  .card-visual {
+    display: block;
+    width: 100%;
+    height: 280px;                 /* explicit pixel height, ALWAYS holds */
+    background: var(--bg-raised) center/cover no-repeat;
+    position: relative;
+  }
+  .card-tag {
+    position: absolute;
+    top: 9px; left: 9px;
+    background: rgba(8,7,6,0.78);
+    color: var(--ink-strong);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    backdrop-filter: blur(6px);
+  }
+  .card-rating {
+    position: absolute;
+    top: 9px; right: 9px;
+    background: var(--accent);
+    color: var(--bg-base);
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 800;
+    font-family: var(--mono);
+  }
+  .card-state-mark {
+    position: absolute;
+    top: 9px; right: 9px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    z-index: 2;
+  }
+  .card[data-state="picked"]   .card-state-mark { display: flex; background: var(--signal-pick); }
+  .card[data-state="rejected"] .card-state-mark { display: flex; background: var(--signal-reject); }
+  .card[data-state="picked"]   .card-state-mark::after { content: "OK"; font-size: 8px; letter-spacing: 0.04em; }
+  .card[data-state="rejected"] .card-state-mark::after { content: "X"; font-size: 9px; }
+  .card[data-state="picked"]   .card-rating,
+  .card[data-state="rejected"] .card-rating { display: none; }
+
+  .card-overlay {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 36px 10px 10px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.85));
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+    pointer-events: none;
+  }
+  .card:hover .card-overlay {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .ov-btn {
+    flex: 1;
+    padding: 8px 6px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  }
+  .ov-btn.pick:hover   { background: var(--signal-pick); border-color: var(--signal-pick); }
+  .ov-btn.reject:hover { background: var(--signal-reject); border-color: var(--signal-reject); }
+
+  .card-meta {
+    padding: 11px 12px 12px;
+    border-top: 1px solid var(--line);
+  }
+  .card-subj {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    line-height: 1.32;
+    color: var(--ink-strong);
+    font-weight: 500;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+  }
+  .card-id {
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+  }
+
+  /* ============ EMPTY / LOADING / ERROR STATES ============ */
+  .state-msg {
+    grid-column: 1 / -1;
+    padding: 80px 20px;
+    text-align: center;
+  }
+  .state-msg .glyph {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 26px;
+    color: var(--ink-soft);
+    line-height: 1.3;
+  }
+  .state-msg .sub {
+    margin-top: 10px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  .skeleton-card {
+    height: 360px;
+    background: linear-gradient(110deg, var(--surface) 30%, var(--surface-2) 50%, var(--surface) 70%);
+    background-size: 220% 100%;
+    animation: shimmer 1.6s linear infinite;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 220% 0; }
+    100% { background-position: -220% 0; }
+  }
+
+  /* ============ FEED VIEW (stub for now) ============ */
+  .feed-stub {
+    padding: 96px 32px;
+    text-align: center;
+  }
+  .feed-stub h3 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--ink-strong);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .feed-stub p {
+    margin-top: 16px;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  /* ============ LIGHTBOX ============ */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(6,5,4,0.95);
+    backdrop-filter: blur(18px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .lightbox[data-open="true"] {
+    display: flex;
+    opacity: 1;
+  }
+  .lb-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 28px;
+    width: 100%;
+    max-width: 1280px;
+    max-height: calc(100vh - 64px);
+    align-items: center;
+  }
+  .lb-img-pane {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    max-height: calc(100vh - 64px);
+  }
+  .lb-img-pane img {
+    max-width: 100%;
+    max-height: calc(100vh - 64px);
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: var(--shadow-2);
+  }
+  .lb-info {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 26px;
+  }
+  .lb-subj {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--ink-strong);
+    margin-bottom: 6px;
+  }
+  .lb-counter {
+    font-size: 9px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+    margin-bottom: 18px;
+  }
+  .lb-rows {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin: 14px 0 18px;
+  }
+  .lb-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .lb-row:last-child { border-bottom: 0; }
+  .lb-row .k {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+  .lb-row .v {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-strong);
+  }
+  .lb-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .lb-btn {
+    padding: 13px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    transition: filter var(--dur-fast) var(--ease);
+  }
+  .lb-btn.pick   { background: var(--signal-pick);   border-color: var(--signal-pick);   color: #fff; }
+  .lb-btn.reject { background: var(--signal-reject); border-color: var(--signal-reject); color: #fff; }
+  .lb-btn:hover  { filter: brightness(1.12); }
+  .lb-btn:active { transform: translateY(1px); }
+  .lb-keys {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 10px;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+  .lb-keys kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    margin: 0 4px 0 0;
+    border-radius: 3px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink);
+  }
+  .lb-close {
+    position: absolute;
+    top: 22px; right: 22px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 18px;
+    background: var(--bg-raised);
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .lb-close:hover { border-color: var(--accent); color: var(--accent); }
+  .lb-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 1;
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .lb-nav.prev { left: 24px; }
+  .lb-nav.next { right: 24px; }
+  .lb-nav:hover { background: var(--accent); border-color: var(--accent); color: var(--bg-base); }
+
+  /* ============ TOAST ============ */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 200;
+    padding: 12px 20px;
+    background: var(--accent);
+    color: var(--bg-base);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    box-shadow: var(--shadow-1);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ============ MOBILE NUKE (high-variance fallback) ============ */
+  @media (max-width: 880px) {
+    .pool { grid-template-columns: 1fr; }
+    .gen-rail { border-right: 0; border-bottom: 1px solid var(--line); max-height: 50vh; }
+    .lb-shell { grid-template-columns: 1fr; }
+    .lb-info { display: none; }
+  }
+</style>
+</head>
+
+<body data-brand="blue_mezcal">
+<div class="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div>
+      <div class="wordmark">
+        <em>Savora</em><span class="div">·</span><span class="ws">Composer</span>
+      </div>
+      <div class="wordmark-tag">Local · Pool review · Generation · Schedule</div>
+    </div>
+    <div class="save-state" id="saveState">
+      <span class="dot"></span><span>Auto-saved</span>
+    </div>
+  </header>
+
+  <!-- BRAND TABS -->
+  <nav class="brand-tabs" role="tablist" aria-label="Brand">
+    <button class="brand-tab" role="tab" aria-pressed="true"  data-brand="blue_mezcal">Blue Mezcal<span class="num" data-count="blue_mezcal">—</span></button>
+    <button class="brand-tab" role="tab" aria-pressed="false" data-brand="jackson_house">Jackson House<span class="num" data-count="jackson_house">—</span></button>
+    <button class="brand-tab" role="tab" aria-pressed="false" data-brand="azteca">El Azteca<span class="num" data-count="azteca">—</span></button>
+  </nav>
+
+  <!-- WORKSPACE TABS -->
+  <nav class="ws-tabs" role="tablist" aria-label="Workspace">
+    <button class="ws-tab" role="tab" aria-pressed="true"  data-ws="pool">Content Pool</button>
+    <button class="ws-tab" role="tab" aria-pressed="false" data-ws="feed">Feed Schedule (3×3)</button>
+  </nav>
+
+  <!-- WORKSPACE BODY -->
+  <main class="ws-body">
+
+    <!-- POOL VIEW -->
+    <section class="pool" data-view="pool">
+
+      <!-- GENERATOR RAIL -->
+      <aside class="gen-rail" aria-label="Generate batch">
+        <h2>Generate batch</h2>
+        <div class="eyebrow">OpenAI · gpt-image-2 · Brand-aware</div>
+
+        <div class="gen-section">
+          <label class="gen-label" for="theme">Theme / occasion (optional)</label>
+          <input id="theme" class="gen-input" type="text" placeholder="e.g. Mother's Day brunch" autocomplete="off">
+        </div>
+
+        <div class="gen-section">
+          <span class="gen-label">Content types — pick which to generate</span>
+          <div class="fmt-list" id="fmtList">
+            <label class="fmt-row"><input type="checkbox" value="hero_dish_editorial" checked><span>Hero dishes</span></label>
+            <label class="fmt-row"><input type="checkbox" value="cocktail_spotlight_moody"><span>Cocktails</span></label>
+            <label class="fmt-row"><input type="checkbox" value="ingredient_anatomy"><span>Ingredient anatomy</span></label>
+            <label class="fmt-row"><input type="checkbox" value="typographic_poster"><span>Typographic posters</span></label>
+            <label class="fmt-row"><input type="checkbox" value="quote_post"><span>Quote posts</span></label>
+            <label class="fmt-row"><input type="checkbox" value="event_announcement"><span>Events</span></label>
+            <label class="fmt-row"><input type="checkbox" value="operational_notice"><span>Ordering / DoorDash / Maps</span></label>
+            <label class="fmt-row"><input type="checkbox" value="short_menu"><span>Short menu</span></label>
+          </div>
+          <div class="split-note" id="splitNote">10 generations · 1 type · <b>10 of each</b></div>
+        </div>
+
+        <div class="gen-section">
+          <label class="gen-label" for="batch">Total batch size</label>
+          <div class="batch-row">
+            <input id="batch" class="gen-range" type="range" min="4" max="64" step="1" value="10">
+            <span class="batch-num" id="batchNum">10</span>
+          </div>
+        </div>
+
+        <div class="gen-section">
+          <label class="gen-label" for="intent">Intent</label>
+          <select id="intent" class="gen-select">
+            <option value="batch_seasonal">Seasonal / event</option>
+            <option value="batch_menu">Menu items</option>
+            <option value="batch_test">Test batch</option>
+          </select>
+        </div>
+
+        <div class="cost-row">
+          <span class="k">Estimated cost</span>
+          <span class="v" id="costEst">$0.40</span>
+        </div>
+
+        <button class="gen-btn" id="genBtn">Generate batch</button>
+
+        <div class="job-card" id="jobCard">
+          <div class="job-line"><span class="label" id="jobLabel">Generating…</span><span id="jobCount">0 / 0</span></div>
+          <div class="job-track"><div class="job-fill" id="jobFill"></div></div>
+        </div>
+      </aside>
+
+      <!-- POOL MAIN -->
+      <section class="pool-main">
+        <div class="pool-toolbar">
+          <button class="chip" aria-pressed="true"  data-filter="all">All <span class="ct" data-ct="all">—</span></button>
+          <button class="chip" aria-pressed="false" data-filter="new">Unrated <span class="ct" data-ct="new">—</span></button>
+          <button class="chip" aria-pressed="false" data-filter="shortlisted">Shortlisted <span class="ct" data-ct="shortlisted">—</span></button>
+          <button class="chip" aria-pressed="false" data-filter="picked">Picked <span class="ct" data-ct="picked">—</span></button>
+          <button class="chip" aria-pressed="false" data-filter="rejected">Rejected <span class="ct" data-ct="rejected">—</span></button>
+          <div class="toolbar-spacer"></div>
+          <input class="search-input" id="searchInput" placeholder="Search subject or post ID…" autocomplete="off">
+          <button class="reload-btn" id="reloadBtn">Reload</button>
+        </div>
+
+        <div class="grid-wrap">
+          <div class="grid" id="grid">
+            <div class="state-msg"><div class="glyph">Loading the pool…</div></div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- FEED VIEW (stub) -->
+    <section class="feed-stub" data-view="feed" hidden>
+      <h3>3×3 Feed Scheduler arrives next.</h3>
+      <p>Drag picks into Tue / Thu slots between scheduled Vista posts.</p>
+    </section>
+
+  </main>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lb-close" id="lbClose" aria-label="Close (Esc)">×</button>
+  <button class="lb-nav prev" id="lbPrev" aria-label="Previous (J)">‹</button>
+  <button class="lb-nav next" id="lbNext" aria-label="Next (K)">›</button>
+  <div class="lb-shell">
+    <div class="lb-img-pane">
+      <img id="lbImg" alt="">
+    </div>
+    <aside class="lb-info">
+      <div class="lb-subj" id="lbSubj">—</div>
+      <div class="lb-counter" id="lbCounter">— / —</div>
+      <div class="lb-rows">
+        <div class="lb-row"><span class="k">Format</span><span class="v" id="lbFormat">—</span></div>
+        <div class="lb-row"><span class="k">Post ID</span><span class="v" id="lbPostId">—</span></div>
+        <div class="lb-row"><span class="k">Variation</span><span class="v" id="lbVar">—</span></div>
+        <div class="lb-row"><span class="k">Rating</span><span class="v" id="lbRating">—</span></div>
+        <div class="lb-row"><span class="k">Status</span><span class="v" id="lbStatus">—</span></div>
+      </div>
+      <div class="lb-actions">
+        <button class="lb-btn pick"   id="lbPick">Pick</button>
+        <button class="lb-btn reject" id="lbReject">Reject</button>
+      </div>
+      <div class="lb-keys">
+        <kbd>←</kbd> <kbd>J</kbd> previous &nbsp;·&nbsp; <kbd>→</kbd> <kbd>K</kbd> next<br>
+        <kbd>P</kbd> pick &nbsp;·&nbsp; <kbd>R</kbd> reject &nbsp;·&nbsp; <kbd>Esc</kbd> close
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // ============ CONFIG ============
+  const BRAND_LABEL = {
+    blue_mezcal:   "Blue Mezcal",
+    jackson_house: "Jackson House",
+    azteca:        "El Azteca",
+  };
+
+  const state = {
+    brand: localStorage.getItem("composer_brand") || "blue_mezcal",
+    workspace: "pool",
+    filter: "all",
+    search: "",
+    pool: [],
+    filtered: [],
+    lightboxIdx: null,
+    jobId: null,
+    pollHandle: null,
+  };
+
+  // ============ HELPERS ============
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const escHtml = (s) => String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+  const fmtLabel = (f) => (f || "").replace(/_/g, " ");
+
+  function api(path, opts = {}) {
+    return fetch(path, {
+      headers: { "Content-Type": "application/json" },
+      ...opts,
+    }).then(async (r) => {
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+      return r.json();
+    });
+  }
+
+  function flash(msg) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(window.__flashT);
+    window.__flashT = setTimeout(() => t.classList.remove("show"), 1700);
+  }
+
+  function imageUrl(asset) {
+    if (asset.image_url && /^https?:/i.test(asset.image_url)) return asset.image_url;
+    if (asset.image_path) return `/media/${asset.image_path}`;
+    return "";
+  }
+
+  function normalizeStateOf(asset) {
+    if (asset.status === "rejected") return "rejected";
+    if (asset.status === "picked" || asset.pick_path) return "picked";
+    return "new";
+  }
+
+  // ============ BRAND TABS ============
+  function setBrand(brand) {
+    state.brand = brand;
+    document.body.dataset.brand = brand;
+    localStorage.setItem("composer_brand", brand);
+    $$(".brand-tab").forEach((t) => {
+      t.setAttribute("aria-pressed", t.dataset.brand === brand ? "true" : "false");
+    });
+    loadPool();
+  }
+  $$(".brand-tab").forEach((t) => t.addEventListener("click", () => setBrand(t.dataset.brand)));
+  document.body.dataset.brand = state.brand;
+  $$(".brand-tab").forEach((t) => t.setAttribute("aria-pressed", t.dataset.brand === state.brand ? "true" : "false"));
+
+  // ============ WORKSPACE TABS ============
+  function setWorkspace(ws) {
+    state.workspace = ws;
+    $$(".ws-tab").forEach((t) => t.setAttribute("aria-pressed", t.dataset.ws === ws ? "true" : "false"));
+    $$('[data-view]').forEach((el) => {
+      el.hidden = el.dataset.view !== ws;
+    });
+  }
+  $$(".ws-tab").forEach((t) => t.addEventListener("click", () => setWorkspace(t.dataset.ws)));
+
+  // ============ FILTER CHIPS ============
+  $$(".chip[data-filter]").forEach((c) => {
+    c.addEventListener("click", () => {
+      state.filter = c.dataset.filter;
+      $$(".chip[data-filter]").forEach((x) => x.setAttribute("aria-pressed", x === c ? "true" : "false"));
+      renderGrid();
+    });
+  });
+
+  // ============ SEARCH ============
+  $("#searchInput").addEventListener("input", (e) => {
+    state.search = e.target.value.trim().toLowerCase();
+    renderGrid();
+  });
+
+  $("#reloadBtn").addEventListener("click", () => {
+    loadPool();
+    loadAllCounts();
+  });
+
+  // ============ POOL ============
+  async function loadPool() {
+    $("#grid").innerHTML = Array.from({ length: 8 })
+      .map(() => '<div class="skeleton-card"></div>')
+      .join("");
+    try {
+      const data = await api(`/api/content-pool?brand=${encodeURIComponent(state.brand)}`);
+      state.pool = data.assets || [];
+      updateFilterCounts();
+      renderGrid();
+    } catch (err) {
+      $("#grid").innerHTML = `<div class="state-msg"><div class="glyph">Couldn't load the pool.</div><div class="sub">${escHtml(err.message)}</div></div>`;
+    }
+  }
+
+  async function loadAllCounts() {
+    for (const b of ["blue_mezcal", "jackson_house", "azteca"]) {
+      try {
+        const data = await api(`/api/content-pool?brand=${encodeURIComponent(b)}`);
+        const n = (data.assets || []).filter((a) => a.status !== "rejected").length;
+        const el = document.querySelector(`[data-count="${b}"]`);
+        if (el) el.textContent = n;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  function updateFilterCounts() {
+    const counts = {
+      all: state.pool.length,
+      new: state.pool.filter((a) => !a.status || a.status === "new").length,
+      shortlisted: state.pool.filter((a) => a.status === "shortlisted").length,
+      picked: state.pool.filter((a) => a.status === "picked" || a.pick_path).length,
+      rejected: state.pool.filter((a) => a.status === "rejected").length,
+    };
+    Object.entries(counts).forEach(([k, v]) => {
+      const el = document.querySelector(`[data-ct="${k}"]`);
+      if (el) el.textContent = v;
+    });
+  }
+
+  function applyFilter(items) {
+    let out = items;
+    if (state.filter === "new") out = out.filter((a) => !a.status || a.status === "new");
+    else if (state.filter === "shortlisted") out = out.filter((a) => a.status === "shortlisted");
+    else if (state.filter === "picked") out = out.filter((a) => a.status === "picked" || a.pick_path);
+    else if (state.filter === "rejected") out = out.filter((a) => a.status === "rejected");
+    if (state.search) {
+      const q = state.search;
+      out = out.filter((a) =>
+        (a.subject || "").toLowerCase().includes(q) ||
+        (a.post_id || "").toLowerCase().includes(q)
+      );
+    }
+    return out;
+  }
+
+  function renderGrid() {
+    const grid = $("#grid");
+    state.filtered = applyFilter(state.pool);
+    if (!state.filtered.length) {
+      grid.innerHTML =
+        '<div class="state-msg">' +
+        '<div class="glyph">Nothing here yet.</div>' +
+        '<div class="sub">Try a different filter — or generate a fresh batch from the left.</div>' +
+        '</div>';
+      return;
+    }
+    grid.innerHTML = state.filtered.map((a, i) => {
+      const url = imageUrl(a);
+      const subj = escHtml(a.subject || "(untitled)");
+      const tag = escHtml(fmtLabel(a.format).slice(0, 20));
+      const cardState = normalizeStateOf(a);
+      const rating = a.rating ? `<div class="card-rating">${a.rating}</div>` : "";
+      const bgStyle = url ? `background-image: url('${escHtml(url)}');` : "";
+      return (
+        `<article class="card" data-id="${escHtml(a.id)}" data-idx="${i}" data-state="${cardState}">` +
+          `<div class="card-visual" style="${bgStyle}">` +
+            (tag ? `<div class="card-tag">${tag}</div>` : "") +
+            rating +
+            `<div class="card-state-mark"></div>` +
+            `<div class="card-overlay">` +
+              `<button class="ov-btn pick"   data-act="pick"   data-id="${escHtml(a.id)}">Pick</button>` +
+              `<button class="ov-btn reject" data-act="reject" data-id="${escHtml(a.id)}">Reject</button>` +
+            `</div>` +
+          `</div>` +
+          `<div class="card-meta">` +
+            `<div class="card-subj">${subj}</div>` +
+            `<div class="card-id">${escHtml(a.post_id || "")} · ${escHtml(a.variation || "")}</div>` +
+          `</div>` +
+        `</article>`
+      );
+    }).join("");
+  }
+
+  // Card click → open lightbox; overlay button click → pick/reject (stop propagation)
+  $("#grid").addEventListener("click", (e) => {
+    const ovBtn = e.target.closest(".ov-btn");
+    if (ovBtn) {
+      e.stopPropagation();
+      const id = ovBtn.dataset.id;
+      if (ovBtn.dataset.act === "pick") doPick(id);
+      else if (ovBtn.dataset.act === "reject") doReject(id);
+      return;
+    }
+    const card = e.target.closest(".card");
+    if (card) {
+      const idx = Number(card.dataset.idx);
+      openLightbox(idx);
+    }
+  });
+
+  // ============ ACTIONS ============
+  async function doPick(id) {
+    try {
+      await api("/api/promote-pick", { method: "POST", body: JSON.stringify({ asset_id: id }) });
+      const a = state.pool.find((x) => x.id === id);
+      if (a) a.status = "picked";
+      flash("Picked");
+      updateFilterCounts();
+      renderGrid();
+      renderLightbox();
+    } catch (err) {
+      flash("Pick failed: " + err.message);
+    }
+  }
+
+  async function doReject(id) {
+    try {
+      await api("/api/reject", { method: "POST", body: JSON.stringify({ asset_id: id }) });
+      const a = state.pool.find((x) => x.id === id);
+      if (a) a.status = "rejected";
+      flash("Rejected");
+      updateFilterCounts();
+      renderGrid();
+      renderLightbox();
+    } catch (err) {
+      flash("Reject failed: " + err.message);
+    }
+  }
+
+  // ============ LIGHTBOX ============
+  function openLightbox(idx) {
+    state.lightboxIdx = idx;
+    renderLightbox();
+    const lb = $("#lightbox");
+    lb.dataset.open = "true";
+    lb.setAttribute("aria-hidden", "false");
+  }
+
+  function closeLightbox() {
+    state.lightboxIdx = null;
+    const lb = $("#lightbox");
+    lb.dataset.open = "false";
+    lb.setAttribute("aria-hidden", "true");
+  }
+
+  function navLightbox(delta) {
+    if (state.lightboxIdx == null || !state.filtered.length) return;
+    const n = state.filtered.length;
+    state.lightboxIdx = (state.lightboxIdx + delta + n) % n;
+    renderLightbox();
+  }
+
+  function renderLightbox() {
+    if (state.lightboxIdx == null) return;
+    const a = state.filtered[state.lightboxIdx];
+    if (!a) { closeLightbox(); return; }
+    $("#lbImg").src = imageUrl(a);
+    $("#lbImg").alt = a.subject || "";
+    $("#lbSubj").textContent = a.subject || "(untitled)";
+    $("#lbCounter").textContent = `${state.lightboxIdx + 1} / ${state.filtered.length}`;
+    $("#lbFormat").textContent = fmtLabel(a.format) || "—";
+    $("#lbPostId").textContent = a.post_id || "—";
+    $("#lbVar").textContent = a.variation || "—";
+    $("#lbRating").textContent = a.rating ? `${a.rating}★` : "—";
+    const stateLabel = normalizeStateOf(a);
+    $("#lbStatus").textContent = stateLabel === "picked" ? "Picked" : stateLabel === "rejected" ? "Rejected" : (a.status || "new");
+    $("#lbPick").textContent = stateLabel === "picked" ? "✓ Picked" : "Pick";
+    $("#lbReject").textContent = stateLabel === "rejected" ? "✗ Rejected" : "Reject";
+  }
+
+  $("#lbClose").addEventListener("click", closeLightbox);
+  $("#lbPrev").addEventListener("click", () => navLightbox(-1));
+  $("#lbNext").addEventListener("click", () => navLightbox(1));
+  $("#lbPick").addEventListener("click", () => {
+    const a = state.filtered[state.lightboxIdx];
+    if (a) doPick(a.id);
+  });
+  $("#lbReject").addEventListener("click", () => {
+    const a = state.filtered[state.lightboxIdx];
+    if (a) doReject(a.id);
+  });
+  $("#lightbox").addEventListener("click", (e) => {
+    if (e.target.id === "lightbox") closeLightbox();
+  });
+
+  // Keyboard
+  document.addEventListener("keydown", (e) => {
+    const open = $("#lightbox").dataset.open === "true";
+    if (!open) return;
+    const key = e.key.toLowerCase();
+    if (key === "escape") { closeLightbox(); return; }
+    if (e.target.matches("input, textarea, select")) return;
+    if (key === "arrowleft" || key === "j") { e.preventDefault(); navLightbox(-1); }
+    else if (key === "arrowright" || key === "k") { e.preventDefault(); navLightbox(1); }
+    else if (key === "p") { e.preventDefault(); $("#lbPick").click(); }
+    else if (key === "r") { e.preventDefault(); $("#lbReject").click(); }
+  });
+
+  // ============ GENERATOR ============
+  const batch = $("#batch");
+  const batchNum = $("#batchNum");
+  const splitNote = $("#splitNote");
+  const costEst = $("#costEst");
+  const fmtList = $("#fmtList");
+  const genBtn = $("#genBtn");
+
+  function selectedFormats() {
+    return $$('#fmtList input[type="checkbox"]:checked').map((i) => i.value);
+  }
+
+  function updateGenSummary() {
+    const n = parseInt(batch.value, 10);
+    const fmts = selectedFormats();
+    batchNum.textContent = n;
+    costEst.textContent = `$${(n * 0.04).toFixed(2)}`;
+    if (!fmts.length) {
+      splitNote.innerHTML = `<b>Pick at least one type</b> · or you'll generate nothing.`;
+      return;
+    }
+    const per = Math.floor(n / fmts.length);
+    const rem = n - per * fmts.length;
+    const perStr = rem ? `${per}–${per + 1}` : `${per}`;
+    splitNote.innerHTML = `${n} generations · ${fmts.length} type${fmts.length > 1 ? "s" : ""} · <b>${perStr} of each</b>`;
+  }
+  batch.addEventListener("input", updateGenSummary);
+  fmtList.addEventListener("change", updateGenSummary);
+  updateGenSummary();
+
+  genBtn.addEventListener("click", async () => {
+    const formats = selectedFormats();
+    if (!formats.length) {
+      flash("Pick at least one content type");
+      return;
+    }
+    const count = parseInt(batch.value, 10);
+    const intent = $("#intent").value;
+    const theme = $("#theme").value.trim();
+    const ok = confirm(`Generate ${count} ${BRAND_LABEL[state.brand]} images across ${formats.length} type${formats.length > 1 ? "s" : ""} via OpenAI? Est. $${(count * 0.04).toFixed(2)}.`);
+    if (!ok) return;
+    genBtn.disabled = true;
+    genBtn.textContent = "Starting…";
+    try {
+      const res = await api("/api/generate", {
+        method: "POST",
+        body: JSON.stringify({ brand: state.brand, count, intent, theme, formats }),
+      });
+      state.jobId = res.job_id;
+      $("#jobCard").classList.add("show");
+      $("#jobLabel").textContent = `Generating ${count} for ${BRAND_LABEL[state.brand]}${theme ? " · " + theme : ""}`;
+      pollJob();
+    } catch (err) {
+      flash("Couldn't start: " + err.message);
+      genBtn.disabled = false;
+      genBtn.textContent = "Generate batch";
+    }
+  });
+
+  async function pollJob() {
+    if (!state.jobId) return;
+    try {
+      const res = await api(`/api/generate/status?job_id=${encodeURIComponent(state.jobId)}`);
+      const done = res.completed || 0;
+      const total = res.total || 0;
+      $("#jobCount").textContent = `${done} / ${total}`;
+      $("#jobFill").style.width = total ? `${(done / total) * 100}%` : "0%";
+      if (res.status === "running") {
+        state.pollHandle = setTimeout(pollJob, 2500);
+      } else {
+        $("#jobLabel").textContent = res.status === "done" ? "Done — pool refreshing" : `Stopped: ${res.status}`;
+        genBtn.disabled = false;
+        genBtn.textContent = "Generate batch";
+        state.jobId = null;
+        setTimeout(() => {
+          $("#jobCard").classList.remove("show");
+          loadPool();
+          loadAllCounts();
+        }, 1400);
+      }
+    } catch (err) {
+      flash("Status poll failed");
+      genBtn.disabled = false;
+      genBtn.textContent = "Generate batch";
+    }
+  }
+
+  // ============ BOOT ============
+  loadAllCounts();
+  loadPool();
+</script>
+</body>
+</html>

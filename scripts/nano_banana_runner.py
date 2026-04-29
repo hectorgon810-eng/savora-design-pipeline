@@ -43,24 +43,32 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Optional
 
-try:
-    from google import genai
-    from google.genai import types
-except ImportError:
-    sys.exit("Install: pip install google-genai python-dotenv Pillow")
+genai = None
+types = None
 
 try:
     from dotenv import load_dotenv
 except ImportError:
-    sys.exit("Install: pip install python-dotenv")
+    load_dotenv = None
+
+from generation_guards import (
+    MODULE_VERSION as GUARDS_MODULE_VERSION,
+    OutputCollisionError,
+    ProtectedAssetError,
+    VALID_INTENTS,
+    assert_image_key_usable_as_reference,
+    assert_intent_valid,
+    assert_output_dir_safe,
+    assert_post_id_safe,
+    load_meta as load_cloudinary_meta,
+)
 
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-load_dotenv(ROOT / ".env")
+if load_dotenv:
+    load_dotenv(ROOT / ".env")
 
 API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-if not API_KEY:
-    sys.exit(f"GEMINI_API_KEY not in {ROOT / '.env'}")
 
 # Default to Nano Banana 2 (Apr 2026 default per intel). Fall back to 2.5 if
 # the preview model isn't available on this account — runner catches the
@@ -458,6 +466,72 @@ def load_cloudinary_urls() -> dict:
     return json.loads(CLOUDINARY_URLS_PATH.read_text())
 
 
+def iso_now() -> str:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    return datetime.now(ZoneInfo("America/New_York")).isoformat()
+
+
+def reference_kind(image_key: str | None, meta: dict) -> str | None:
+    if not image_key:
+        return None
+    record = (meta.get("assets") or {}).get(image_key) or {}
+    return record.get("kind") or meta.get("default_kind") or "photo"
+
+
+def write_batch_manifest(
+    *,
+    out_dir: pathlib.Path,
+    brand: str,
+    post_id: str,
+    intent: str,
+    started_at: str,
+    image_key_reference: str | None,
+    image_key_reference_kind: str | None,
+    backend: str,
+    count: int,
+    guard_checks_passed: bool,
+) -> None:
+    outputs = []
+    if out_dir.exists():
+        for path in sorted(out_dir.glob("variation_*.png")):
+            outputs.append({
+                "variation": path.stem.replace("variation_", ""),
+                "file": path.name,
+                "bytes": path.stat().st_size,
+            })
+    manifest = {
+        "brand": brand,
+        "post_id": post_id,
+        "intent": intent,
+        "started_at": started_at,
+        "finished_at": iso_now(),
+        "image_key_reference": image_key_reference,
+        "image_key_reference_kind": image_key_reference_kind,
+        "backend": backend,
+        "count": count,
+        "outputs": outputs,
+        "guard_checks_passed": guard_checks_passed,
+        "guards_module_version": GUARDS_MODULE_VERSION,
+    }
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "BATCH_MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+
+def load_genai_sdk() -> None:
+    global genai, types
+    if genai is not None and types is not None:
+        return
+    try:
+        from google import genai as _genai
+        from google.genai import types as _types
+    except ImportError:
+        sys.exit("Install: pip install google-genai python-dotenv Pillow")
+    genai = _genai
+    types = _types
+
+
 def fetch_image_bytes(url: str, retries: int = 3) -> bytes:
     last: Optional[Exception] = None
     for attempt in range(retries):
@@ -767,7 +841,12 @@ def generate_with_retry(
 # ============================================================
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Nano Banana parallel variation runner")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Nano Banana parallel variation runner. This pipeline never overwrites a real "
+            "Cloudinary photo. POST_IDs that collide with cloudinary_urls.json keys are rejected."
+        )
+    )
     parser.add_argument("--brand", required=True, choices=BRAND_META.keys())
     parser.add_argument("--post-id", required=True)
     parser.add_argument(
@@ -782,6 +861,12 @@ def main() -> None:
     )
     parser.add_argument("--subject", required=True)
     parser.add_argument("--support", default="")
+    parser.add_argument(
+        "--intent",
+        required=True,
+        choices=sorted(VALID_INTENTS),
+        help="Why this batch is being generated. Required.",
+    )
     parser.add_argument("--count", type=int, default=5)
     parser.add_argument(
         "--aspect",
@@ -832,12 +917,32 @@ def main() -> None:
     fmt = FORMATS[args.format]
     aspect_ratio = args.aspect or fmt.default_aspect
     stem_key = args.stem or meta["default_stem"]
+    started_at = iso_now()
+    out_dir = ROOT / "OUTPUT" / "nano_banana" / args.brand / args.post_id
+    guard_checks_passed = False
+
+    try:
+        cloudinary_meta = load_cloudinary_meta(ROOT)
+        urls = load_cloudinary_urls()
+        assert_intent_valid(args.intent)
+        assert_post_id_safe(args.post_id, urls)
+        if args.image_key:
+            assert_image_key_usable_as_reference(args.image_key, cloudinary_meta)
+        assert_output_dir_safe(out_dir, urls)
+        guard_checks_passed = True
+    except (OutputCollisionError, ProtectedAssetError) as exc:
+        sys.exit(str(exc))
+
+    image_key_reference_kind = reference_kind(args.image_key, cloudinary_meta)
+
+    if not API_KEY:
+        sys.exit(f"GEMINI_API_KEY not in {ROOT / '.env'}")
+    load_genai_sdk()
 
     # Reference photo
     ref_bytes: Optional[bytes] = None
     ref_url: str = ""
     if args.image_key:
-        urls = load_cloudinary_urls()
         if args.image_key not in urls:
             sys.exit(f"Unknown image key: {args.image_key!r}")
         ref_url = urls[args.image_key]
@@ -862,7 +967,6 @@ def main() -> None:
 
     award_badge = None if args.no_award else meta.get("award_badge")
 
-    out_dir = ROOT / "OUTPUT" / "nano_banana" / args.brand / args.post_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Log prompts for reproducibility
@@ -917,6 +1021,7 @@ def main() -> None:
                 "angle": angle,
                 "image_key": args.image_key,
                 "image_url": ref_url,
+                "intent": args.intent,
                 "subject": args.subject,
                 "support": args.support,
                 "prompt": text,
@@ -1009,19 +1114,33 @@ def main() -> None:
         print(f"[gen {tag}{idx:>2}] ✓ {out_path.name} ({out_path.stat().st_size/1024:.0f} KB) via {used_model}")
         return idx, out_path
 
-    with cf.ThreadPoolExecutor(max_workers=args.parallel) as executor:
-        list(executor.map(worker, jobs))
-
-    elapsed = time.time() - start
-
-    # Auto-build review grid
     try:
-        build_review_grid(out_dir, args.backend)
-        print(f"[grid] {out_dir / '_GRID.jpg'}")
-    except Exception as exc:  # noqa: BLE001
-        print(f"[grid] skipped ({type(exc).__name__}: {exc})")
+        with cf.ThreadPoolExecutor(max_workers=args.parallel) as executor:
+            list(executor.map(worker, jobs))
 
-    print(f"\nDone in {elapsed:.1f}s. Review: open {out_dir}")
+        elapsed = time.time() - start
+
+        # Auto-build review grid
+        try:
+            build_review_grid(out_dir, args.backend)
+            print(f"[grid] {out_dir / '_GRID.jpg'}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[grid] skipped ({type(exc).__name__}: {exc})")
+
+        print(f"\nDone in {elapsed:.1f}s. Review: open {out_dir}")
+    finally:
+        write_batch_manifest(
+            out_dir=out_dir,
+            brand=args.brand,
+            post_id=args.post_id,
+            intent=args.intent,
+            started_at=started_at,
+            image_key_reference=args.image_key,
+            image_key_reference_kind=image_key_reference_kind,
+            backend=args.backend,
+            count=args.count,
+            guard_checks_passed=guard_checks_passed,
+        )
 
 
 def build_review_grid(out_dir: pathlib.Path, backend: str) -> None:
