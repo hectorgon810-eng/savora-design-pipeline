@@ -663,28 +663,198 @@
     100% { background-position: -220% 0; }
   }
 
-  /* ============ FEED VIEW (stub for now) ============ */
-  .feed-stub {
-    padding: 96px 32px;
-    text-align: center;
+  /* ============ FEED VIEW ============ */
+  .feed {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: 100%;
+    min-height: 0;
   }
-  .feed-stub h3 {
+  .feed-pool {
+    border-right: 1px solid var(--line);
+    background: var(--bg-sunken);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+  .feed-pool-head {
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .feed-pool-title {
     font-family: var(--serif);
     font-style: italic;
-    font-size: 36px;
+    font-size: 22px;
     font-weight: 500;
     color: var(--ink-strong);
-    line-height: 1.1;
     letter-spacing: -0.01em;
   }
-  .feed-stub p {
-    margin-top: 16px;
-    font-size: 12px;
+  .feed-pool-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+  .feed-pool-body {
+    overflow-y: auto;
+    padding: 14px 16px 22px;
+    display: grid;
+    gap: 8px;
+  }
+  .pool-tile {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 10px;
+    padding: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: grab;
+    transition: border-color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+    user-select: none;
+  }
+  .pool-tile:active { cursor: grabbing; transform: scale(0.98); }
+  .pool-tile:hover { border-color: var(--accent); }
+  .pool-tile .thumb {
+    width: 64px;
+    height: 80px;
+    background: var(--bg-raised) center/cover no-repeat;
+    border-radius: 4px;
+    flex: 0 0 auto;
+  }
+  .pool-tile .body { overflow: hidden; min-width: 0; }
+  .pool-tile .cap {
+    font-size: 11px;
+    color: var(--ink-strong);
+    line-height: 1.32;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+  }
+  .pool-tile .src {
+    margin-top: 3px;
+    font-size: 9px;
     letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .feed-grid-wrap {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .feed-grid-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .feed-grid-title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 26px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ink-strong);
+    letter-spacing: -0.01em;
+  }
+  .feed-grid-sub {
+    margin-top: 5px;
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--ink-faint);
     font-weight: 600;
   }
+
+  .feed-grid {
+    overflow-y: auto;
+    padding: 18px 24px 32px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    max-width: 920px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .feed-slot {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-top: 100%;          /* 1:1 IG aspect */
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+  .feed-slot.has-post { border-color: transparent; }
+  .feed-slot:hover { border-color: var(--accent); z-index: 2; }
+  .feed-slot.drag-over { border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--accent); }
+  .feed-slot .slot-img {
+    position: absolute;
+    inset: 0;
+    background: center/cover no-repeat;
+  }
+  .feed-slot .slot-date {
+    position: absolute;
+    top: 5px; left: 5px;
+    background: rgba(0,0,0,0.78);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
+  }
+  .feed-slot .slot-source {
+    position: absolute;
+    top: 5px; right: 5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 800;
+  }
+  .feed-slot .slot-source[data-source="scheduled"] { background: var(--ink-strong); color: var(--bg-base); }
+  .feed-slot .slot-source[data-source="bulk"]      { background: var(--accent); color: var(--bg-base); }
+  .feed-slot .slot-source[data-source="picks"]     { background: var(--signal-pick); color: #fff; }
+  .feed-slot.empty {
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.02),
+      rgba(255,255,255,0.02) 6px,
+      rgba(255,255,255,0.04) 6px,
+      rgba(255,255,255,0.04) 12px
+    );
+  }
+  .feed-slot.empty::after {
+    content: "drop";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+  .sub-only { padding: 16px; }
 
   /* ============ LIGHTBOX ============ */
   .lightbox {
@@ -989,10 +1159,27 @@
 
     </section>
 
-    <!-- FEED VIEW (stub) -->
-    <section class="feed-stub" data-view="feed" hidden>
-      <h3>3×3 Feed Scheduler arrives next.</h3>
-      <p>Drag picks into Tue / Thu slots between scheduled Vista posts.</p>
+    <!-- FEED VIEW -->
+    <section class="feed" data-view="feed" hidden>
+      <aside class="feed-pool" aria-label="Pool">
+        <div class="feed-pool-head">
+          <h3 class="feed-pool-title">Pool</h3>
+          <span class="feed-pool-count" id="feedPoolCount">—</span>
+        </div>
+        <div class="feed-pool-body" id="feedPool">
+          <div class="state-msg sub-only"><div class="sub">Loading…</div></div>
+        </div>
+      </aside>
+      <div class="feed-grid-wrap">
+        <div class="feed-grid-head">
+          <div>
+            <h3 class="feed-grid-title">3×3 feed schedule</h3>
+            <div class="feed-grid-sub" id="feedGridSub">Most recent on top · drag to swap</div>
+          </div>
+          <button class="reload-btn" id="feedReload">Reload</button>
+        </div>
+        <div class="feed-grid" id="feedGrid"></div>
+      </div>
     </section>
 
   </main>
@@ -1433,6 +1620,147 @@
       genBtn.disabled = false;
       genBtn.textContent = "Generate batch";
     }
+  }
+
+  // ============ FEED TAB ============
+  const FEED_KEY = (b) => `composer_feed_${b}`;
+
+  function setWorkspaceWithLoad(ws) {
+    setWorkspace(ws);
+    if (ws === "feed") loadFeedGrid();
+  }
+  $$(".ws-tab").forEach((t) => {
+    t.removeEventListener("click", () => setWorkspace(t.dataset.ws));
+    t.addEventListener("click", () => setWorkspaceWithLoad(t.dataset.ws));
+  });
+
+  $("#feedReload")?.addEventListener("click", loadFeedGrid);
+
+  async function loadFeedGrid() {
+    const grid = $("#feedGrid");
+    const pool = $("#feedPool");
+    grid.innerHTML = '<div class="state-msg" style="grid-column: 1/-1;"><div class="glyph">Loading feed…</div></div>';
+    pool.innerHTML = '<div class="state-msg sub-only"><div class="sub">Loading…</div></div>';
+    try {
+      const data = await api(`/api/feed-grid?brand=${encodeURIComponent(state.brand)}`);
+      // restore localStorage swaps if any
+      const saved = JSON.parse(localStorage.getItem(FEED_KEY(state.brand)) || "null");
+      const slots = saved?.slots && saved.slots.length === data.slots.length ? saved.slots : data.slots;
+      const poolItems = saved?.pool || data.pool;
+      window.__feed = { slots, pool: poolItems };
+      renderFeedGrid();
+    } catch (err) {
+      grid.innerHTML = `<div class="state-msg" style="grid-column: 1/-1;"><div class="glyph">Couldn't load.</div><div class="sub">${escHtml(err.message)}</div></div>`;
+    }
+  }
+
+  function saveFeedState() {
+    if (!window.__feed) return;
+    localStorage.setItem(FEED_KEY(state.brand), JSON.stringify(window.__feed));
+  }
+
+  function fmtDate(iso, dow) {
+    const d = new Date(iso + "T00:00:00");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${(dow || "").toUpperCase()} ${mm}-${dd}`;
+  }
+
+  function renderFeedGrid() {
+    if (!window.__feed) return;
+    const { slots, pool } = window.__feed;
+    const grid = $("#feedGrid");
+    const poolEl = $("#feedPool");
+    $("#feedPoolCount").textContent = `${pool.length} unscheduled`;
+    $("#feedGridSub").textContent = `${slots.length} slots · drag pool→slot replaces · slot↔slot swaps`;
+
+    grid.innerHTML = slots.map((s, idx) => {
+      const post = s.post;
+      const dateBadge = `<div class="slot-date">${fmtDate(s.date, s.dow)}</div>`;
+      if (!post) {
+        return `<div class="feed-slot empty" data-idx="${idx}" data-empty="1">${dateBadge}</div>`;
+      }
+      const url = post.url || "";
+      const sourceBadge = post.source && post.source !== "scheduled"
+        ? `<div class="slot-source" data-source="${escHtml(post.source)}">${escHtml(post.source)}</div>`
+        : `<div class="slot-source" data-source="scheduled">live</div>`;
+      const bg = url ? `style="background-image:url('${escHtml(url)}');"` : "";
+      return `
+        <div class="feed-slot has-post" draggable="true" data-idx="${idx}">
+          <div class="slot-img" ${bg}></div>
+          ${dateBadge}
+          ${sourceBadge}
+        </div>`;
+    }).join("");
+
+    poolEl.innerHTML = pool.map((p, i) => {
+      const url = p.url || "";
+      const cap = escHtml(p.caption_preview || p.caption?.split("\n")[0] || p.id || "(post)");
+      const src = escHtml(p.source || "new");
+      return `
+        <div class="pool-tile" draggable="true" data-pidx="${i}">
+          <div class="thumb" style="${url ? `background-image:url('${escHtml(url)}');` : ""}"></div>
+          <div class="body">
+            <div class="cap">${cap}</div>
+            <div class="src">${src}</div>
+          </div>
+        </div>`;
+    }).join("") || '<div class="state-msg sub-only"><div class="sub">Pool empty</div></div>';
+
+    bindFeedDnD();
+  }
+
+  function bindFeedDnD() {
+    // Pool drag start
+    $$('.pool-tile').forEach((el) => {
+      el.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ from: "pool", idx: Number(el.dataset.pidx) }));
+        e.dataTransfer.effectAllowed = "move";
+      });
+    });
+    // Slot drag start (only filled)
+    $$('.feed-slot[draggable="true"]').forEach((el) => {
+      el.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ from: "slot", idx: Number(el.dataset.idx) }));
+        e.dataTransfer.effectAllowed = "move";
+      });
+    });
+    $$('.feed-slot').forEach((el) => {
+      el.addEventListener("dragover", (e) => { e.preventDefault(); el.classList.add("drag-over"); });
+      el.addEventListener("dragleave", () => el.classList.remove("drag-over"));
+      el.addEventListener("drop", (e) => {
+        e.preventDefault();
+        el.classList.remove("drag-over");
+        try {
+          const drag = JSON.parse(e.dataTransfer.getData("text/plain"));
+          const targetIdx = Number(el.dataset.idx);
+          handleFeedDrop(drag, targetIdx);
+        } catch {}
+      });
+    });
+  }
+
+  function handleFeedDrop(drag, targetIdx) {
+    const f = window.__feed;
+    if (!f) return;
+    if (drag.from === "pool") {
+      const post = f.pool[drag.idx];
+      if (!post) return;
+      // evict current slot post back to pool top
+      const evicted = f.slots[targetIdx].post;
+      f.pool.splice(drag.idx, 1);
+      if (evicted) f.pool.unshift(evicted);
+      f.slots[targetIdx].post = post;
+    } else if (drag.from === "slot") {
+      if (drag.idx === targetIdx) return;
+      const a = f.slots[drag.idx].post;
+      const b = f.slots[targetIdx].post;
+      f.slots[drag.idx].post = b;
+      f.slots[targetIdx].post = a;
+    }
+    saveFeedState();
+    renderFeedGrid();
+    flash("Updated");
   }
 
   // ============ BOOT ============

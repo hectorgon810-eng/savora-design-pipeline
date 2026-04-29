@@ -2827,6 +2827,61 @@ def get_job_status(job_id: str) -> dict:
     }
 
 
+# --- Feed grid (Vista CSV merge + picks pool) ---------------------------------
+
+_FEED_BUILDER = None
+
+
+def _load_feed_builder():
+    """Lazy-import scripts/build_feed_composer.py so we reuse load_* + build_slots
+    without duplicating logic. Cache the module after first load."""
+    global _FEED_BUILDER
+    if _FEED_BUILDER is not None:
+        return _FEED_BUILDER
+    import importlib.util
+    path = ROOT / "scripts" / "build_feed_composer.py"
+    spec = importlib.util.spec_from_file_location("build_feed_composer", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _FEED_BUILDER = mod
+    return mod
+
+
+def build_feed_grid(brand: str, *, root: pathlib.Path) -> dict:
+    """Build the feed grid for a single brand: scheduled Vista slots + pool of
+    unscheduled new posts and picks. Mirrors what build_feed_composer.py does
+    when it generates the standalone HTML — only without the HTML wrapper."""
+    fb = _load_feed_builder()
+    aliases = {"el_azteca": "azteca"}
+    brand_key = aliases.get(brand, brand)
+    if brand_key not in fb.BRAND_CONFIG:
+        return {"brand": brand_key, "error": "unknown_brand", "slots": [], "pool": []}
+    scheduled = fb.load_scheduled(brand_key)
+    new_posts = fb.load_unscheduled(brand_key)
+    picks = fb.load_picks(brand_key)
+    slots, leftover, queued = fb.build_slots(brand_key, scheduled, new_posts)
+    pool = list(queued) + list(picks) + list(leftover)
+
+    def normalize_url(post: dict) -> dict:
+        url = post.get("url", "") or ""
+        if url and not url.startswith(("http://", "https://")):
+            post = {**post, "url": f"/media/{url}"}
+        return post
+
+    slots = [
+        {**s, "post": normalize_url(s["post"]) if s.get("post") else None}
+        for s in slots
+    ]
+    pool = [normalize_url(p) for p in pool]
+    return {
+        "brand": brand_key,
+        "slot_count": len(slots),
+        "pool_count": len(pool),
+        "slots": slots,
+        "pool": pool,
+    }
+
+
 # --- HTTP handler -------------------------------------------------------------
 
 
@@ -2881,6 +2936,11 @@ class ContentHandler(BaseHTTPRequestHandler):
                 qs = urllib.parse.parse_qs(parsed.query)
                 job_id = (qs.get("job_id") or [""])[0]
                 self._json(get_job_status(job_id))
+                return
+            if parsed.path == "/api/feed-grid":
+                qs = urllib.parse.parse_qs(parsed.query)
+                brand = (qs.get("brand") or ["blue_mezcal"])[0]
+                self._json(build_feed_grid(brand, root=self.root))
                 return
             if parsed.path.startswith("/media/"):
                 rel = urllib.parse.unquote(parsed.path.removeprefix("/media/"))
