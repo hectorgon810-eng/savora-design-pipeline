@@ -890,7 +890,39 @@ AVANT_ANGLES = {
 }
 
 
-def build_post_configs(brand: str, target_count: int, avant: bool = False) -> list[dict]:
+# Map each user-facing format key (composer.html) → bulk_build content_type names.
+# When the composer or CLI restricts formats, the mix is filtered to only ct_names
+# in this map's union of selected formats.
+FORMAT_TO_CT_NAMES: dict[str, set[str]] = {
+    "hero_dish_editorial":      {"food_hero"},
+    "cocktail_spotlight_moody": {"cocktail_hero"},
+    "ingredient_anatomy":       {"ingredient_anatomy"},
+    "typographic_poster":       {"carousel_masthead", "multi_dish_showcase", "cultural",
+                                 "review_card", "menu_highlight_text", "campaign_masthead"},
+    "quote_post":               {"typography_first", "philosophy_typographic", "metric_card"},
+    "event_announcement":       {"flyer"},
+    "operational_notice":       {"utility"},
+    "short_menu":               {"menu_highlight_text", "multi_dish_showcase"},
+}
+
+
+def _allowed_ct_names_from_formats(formats: list[str] | None) -> set[str] | None:
+    if not formats:
+        return None
+    allowed: set[str] = set()
+    for f in formats:
+        allowed |= FORMAT_TO_CT_NAMES.get(f, set())
+    return allowed or None
+
+
+def build_post_configs(
+    brand: str,
+    target_count: int,
+    avant: bool = False,
+    *,
+    formats: list[str] | None = None,
+    theme: str | None = None,
+) -> list[dict]:
     """Generate target_count post configs for brand, rotating assets + angles.
 
     Asset pools are SHUFFLED per-batch (time-seeded) AND subjects already in
@@ -898,11 +930,30 @@ def build_post_configs(brand: str, target_count: int, avant: bool = False) -> li
 
     If avant=True, use AVANT_ANGLES pool (experimental, rule-breaking) instead
     of the standard ANGLES dict.
+
+    If formats is given (composer-friendly format keys like "hero_dish_editorial"),
+    only mix entries whose ct_name maps to one of those formats are kept, and
+    target_count is split evenly across the surviving content types.
+
+    If theme is given (e.g. "Mother's Day"), it is appended to subject + support
+    so the prompt construction picks it up downstream.
     """
     plan = BRAND_PLANS[brand]
     assets = plan["assets"]
     angles = plan["angles"]
     mix = plan["mix"]
+
+    # Filter mix by allowed ct_names from format selection
+    allowed_ct = _allowed_ct_names_from_formats(formats)
+    if allowed_ct is not None:
+        mix = [(ct, count, mode) for (ct, count, mode) in mix if ct in allowed_ct]
+        if not mix:
+            print(f"[{brand}] no mix entries match selected formats {formats} — skipping")
+            return []
+        # Re-balance counts evenly across surviving ct_names so the split feels intentional
+        per = max(1, target_count // len(mix))
+        mix = [(ct, per, mode) for (ct, _c, mode) in mix]
+        print(f"[{brand}] formats {formats} → {len(mix)} ct types · {per} each")
 
     # Time-seeded RNG — different shuffle each run
     rng = random.Random(time.time_ns())
@@ -963,16 +1014,29 @@ def build_post_configs(brand: str, target_count: int, avant: bool = False) -> li
             )
 
             post_id = f"BULK-{post_idx:03d}"
+            # Theme injection — prepend theme tag to subject and append theme
+            # context to support copy. Downstream prompt builder picks these up
+            # verbatim, so the generated image will speak to the seasonal occasion
+            # while still honoring brand register/palette.
+            final_subject = subject
+            final_support = support
+            if theme:
+                final_subject = f"{theme} · {subject}" if subject else theme
+                if support:
+                    final_support = f"{support} (Seasonal: {theme}.)"
+                else:
+                    final_support = f"Seasonal: {theme}."
             configs.append({
                 "brand": brand,
                 "post_id": post_id,
                 "format": fmt,
                 "stem": stem,
                 "image_key": image_key,
-                "subject": subject,
-                "support": support,
+                "subject": final_subject,
+                "support": final_support,
                 "angle": angle,
                 "content_type": ct_name,
+                "theme": theme or "",
             })
             post_idx += 1
             if post_idx > target_count:
@@ -1032,7 +1096,24 @@ def main() -> None:
     parser.add_argument("--location", choices=["camden", "dover", "rehoboth"],
                         help="AZ-only: restrict asset pool to dishes confirmed at this specific location. "
                              "Use when Camden/Dover/Rehoboth menus differ to prevent cross-location content leaks.")
+    parser.add_argument("--theme", default=None,
+                        help="Seasonal occasion (e.g. 'Mother's Day brunch'). Prepended to subject "
+                             "and appended to support so the prompt picks it up. "
+                             "Falls back to env SAVORA_GENERATION_THEME.")
+    parser.add_argument("--formats", default=None,
+                        help="Comma-separated composer format keys (e.g. "
+                             "'hero_dish_editorial,cocktail_spotlight_moody') to restrict the mix. "
+                             "Falls back to env SAVORA_GENERATION_FORMATS.")
     args = parser.parse_args()
+
+    # env fallbacks (composer.html → /api/generate → subprocess sets env)
+    theme = args.theme or os.environ.get("SAVORA_GENERATION_THEME") or None
+    formats_raw = args.formats or os.environ.get("SAVORA_GENERATION_FORMATS") or ""
+    formats = [f.strip() for f in formats_raw.split(",") if f.strip()] or None
+    if theme:
+        print(f"[theme] {theme}")
+    if formats:
+        print(f"[formats] {', '.join(formats)}")
     try:
         assert_intent_valid(args.intent)
     except Exception as exc:  # noqa: BLE001
@@ -1048,7 +1129,10 @@ def main() -> None:
 
     all_configs = []
     for b in brands:
-        configs = build_post_configs(b, args.count, avant=args.avant)
+        configs = build_post_configs(
+            b, args.count, avant=args.avant,
+            formats=formats, theme=theme,
+        )
         print(f"[{b}] {len(configs)} configs planned")
         all_configs.extend(configs)
 

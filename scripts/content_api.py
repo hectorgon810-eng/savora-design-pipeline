@@ -2745,22 +2745,38 @@ def _count_generated_files(brand: str, root: pathlib.Path, since_ts: float) -> i
     return n
 
 
+# Map composer-friendly intent values → bulk_build VALID_INTENTS.
+COMPOSER_INTENT_MAP = {
+    "batch_seasonal": "new_seasonal_drop",
+    "batch_menu":     "new_dish_typography",
+    "batch_event":    "new_event_promo",
+    "batch_quote":    "new_quote_card",
+    "batch_utility":  "new_utility_post",
+    "batch_test":     "experiment",
+}
+
+
 def start_generation_job(
     *, root: pathlib.Path, brand: str, count: int, intent: str, theme: str,
     formats: list | None = None,
 ) -> dict:
     """Spawn bulk_build.py as subprocess. Track via in-process dict.
-    Theme + format selection passed via env so bulk_build.py can be extended
-    without breaking its CLI."""
+    Theme + format selection passed via env (bulk_build also accepts them as
+    CLI flags --theme and --formats)."""
     job_id = _uuid.uuid4().hex[:12]
     started_at = time.time()
+    canonical_intent = COMPOSER_INTENT_MAP.get(intent, intent)
     cmd = [
         sys.executable,
         str(root / "scripts" / "bulk_build.py"),
         "--brand", brand,
         "--count", str(count),
-        "--intent", intent,
+        "--intent", canonical_intent,
     ]
+    if theme:
+        cmd += ["--theme", theme]
+    if formats:
+        cmd += ["--formats", ",".join(formats)]
     env = os.environ.copy()
     if theme:
         env["SAVORA_GENERATION_THEME"] = theme
