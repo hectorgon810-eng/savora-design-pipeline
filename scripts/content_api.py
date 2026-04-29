@@ -2898,6 +2898,45 @@ def build_feed_grid(brand: str, *, root: pathlib.Path) -> dict:
     }
 
 
+# --- Composer feed persistence (JSON file per brand) --------------------------
+
+def _composer_state_dir(root: pathlib.Path) -> pathlib.Path:
+    p = root / "OUTPUT" / "composer_state"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def _composer_state_path(brand: str, root: pathlib.Path) -> pathlib.Path:
+    aliases = {"el_azteca": "azteca"}
+    slug = aliases.get(brand, brand)
+    safe = "".join(c for c in slug if c.isalnum() or c in "_-").lower() or "unknown"
+    return _composer_state_dir(root) / f"feed_{safe}.json"
+
+
+def load_composer_feed(brand: str, *, root: pathlib.Path) -> dict:
+    """Return {slots, pool, saved_at} or {empty: True} if no plan saved yet."""
+    p = _composer_state_path(brand, root)
+    if not p.exists():
+        return {"empty": True, "brand": brand}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        return {"empty": True, "brand": brand, "error": f"corrupt:{exc}"}
+
+
+def save_composer_feed(brand: str, *, slots: list, pool: list, root: pathlib.Path) -> None:
+    p = _composer_state_path(brand, root)
+    payload = {
+        "brand": brand,
+        "saved_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "slots": slots,
+        "pool": pool,
+    }
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    tmp.replace(p)
+
+
 # --- HTTP handler -------------------------------------------------------------
 
 
@@ -2957,6 +2996,11 @@ class ContentHandler(BaseHTTPRequestHandler):
                 qs = urllib.parse.parse_qs(parsed.query)
                 brand = (qs.get("brand") or ["blue_mezcal"])[0]
                 self._json(build_feed_grid(brand, root=self.root))
+                return
+            if parsed.path == "/api/composer-feed":
+                qs = urllib.parse.parse_qs(parsed.query)
+                brand = (qs.get("brand") or ["blue_mezcal"])[0]
+                self._json(load_composer_feed(brand, root=self.root))
                 return
             if parsed.path.startswith("/media/"):
                 rel = urllib.parse.unquote(parsed.path.removeprefix("/media/"))
@@ -3069,6 +3113,13 @@ class ContentHandler(BaseHTTPRequestHandler):
                         theme=theme, formats=formats,
                     )
                     self._json(job)
+                    return
+                if parsed.path == "/api/composer-feed":
+                    brand = payload.get("brand", "blue_mezcal")
+                    slots = payload.get("slots") or []
+                    pool = payload.get("pool") or []
+                    save_composer_feed(brand, slots=slots, pool=pool, root=self.root)
+                    self._json({"ok": True, "brand": brand, "slot_count": len(slots), "pool_count": len(pool)})
                     return
                 if parsed.path == "/api/plan/regenerate":
                     qs = urllib.parse.parse_qs(parsed.query)

@@ -1642,9 +1642,7 @@
     }
   }
 
-  // ============ FEED TAB ============
-  const FEED_KEY = (b) => `composer_feed_${b}`;
-
+  // ============ FEED TAB (server-persisted via /api/composer-feed) ============
   function setWorkspaceWithLoad(ws) {
     setWorkspace(ws);
     if (ws === "feed") loadFeedGrid();
@@ -1662,21 +1660,42 @@
     grid.innerHTML = '<div class="state-msg" style="grid-column: 1/-1;"><div class="glyph">Loading feed…</div></div>';
     pool.innerHTML = '<div class="state-msg sub-only"><div class="sub">Loading…</div></div>';
     try {
-      const data = await api(`/api/feed-grid?brand=${encodeURIComponent(state.brand)}`);
-      // restore localStorage swaps if any
-      const saved = JSON.parse(localStorage.getItem(FEED_KEY(state.brand)) || "null");
-      const slots = saved?.slots && saved.slots.length === data.slots.length ? saved.slots : data.slots;
-      const poolItems = saved?.pool || data.pool;
+      // Load fresh structure (Vista CSV merge) AND any saved swaps from server.
+      const [fresh, saved] = await Promise.all([
+        api(`/api/feed-grid?brand=${encodeURIComponent(state.brand)}`),
+        api(`/api/composer-feed?brand=${encodeURIComponent(state.brand)}`).catch(() => ({ empty: true })),
+      ]);
+      const useSaved = !saved.empty && Array.isArray(saved.slots) && saved.slots.length === fresh.slots.length;
+      const slots = useSaved ? saved.slots : fresh.slots;
+      const poolItems = useSaved ? saved.pool : fresh.pool;
       window.__feed = { slots, pool: poolItems };
       renderFeedGrid();
+      if (useSaved) flash("Restored saved layout");
     } catch (err) {
       grid.innerHTML = `<div class="state-msg" style="grid-column: 1/-1;"><div class="glyph">Couldn't load.</div><div class="sub">${escHtml(err.message)}</div></div>`;
     }
   }
 
+  let _feedSaveTimer = null;
   function saveFeedState() {
     if (!window.__feed) return;
-    localStorage.setItem(FEED_KEY(state.brand), JSON.stringify(window.__feed));
+    // Debounce — flurry of swaps collapses to one POST after 600ms idle.
+    clearTimeout(_feedSaveTimer);
+    _feedSaveTimer = setTimeout(async () => {
+      try {
+        await api("/api/composer-feed", {
+          method: "POST",
+          body: JSON.stringify({
+            brand: state.brand,
+            slots: window.__feed.slots,
+            pool: window.__feed.pool,
+          }),
+        });
+        $("#saveState").innerHTML = '<span class="dot"></span><span>Saved</span>';
+      } catch (err) {
+        $("#saveState").innerHTML = '<span class="dot" style="background:#d96a6a"></span><span>Save failed</span>';
+      }
+    }, 600);
   }
 
   function fmtDate(iso, dow) {

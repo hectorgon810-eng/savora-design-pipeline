@@ -36,3 +36,4 @@ OUTPUT/review_*.html
 OUTPUT/test_img.html
 # HTML previews are fine to track if you want version control; currently ignored by default
 OUTPUT/claude_design/**/variation_*.html
+OUTPUT/composer_state/
