@@ -420,6 +420,22 @@
     background: var(--accent);
     transition: width var(--dur-slow) var(--ease);
   }
+  .job-log {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--bg-sunken);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    max-height: 180px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .job-log:empty { display: none; }
 
   /* ----- Pool main area ----- */
   .pool-main {
@@ -1134,6 +1150,7 @@
         <div class="job-card" id="jobCard">
           <div class="job-line"><span class="label" id="jobLabel">Generating…</span><span id="jobCount">0 / 0</span></div>
           <div class="job-track"><div class="job-fill" id="jobFill"></div></div>
+          <pre class="job-log" id="jobLog"></pre>
         </div>
       </aside>
 
@@ -1617,23 +1634,34 @@
   async function pollJob() {
     if (!state.jobId) return;
     try {
-      const res = await api(`/api/generate/status?job_id=${encodeURIComponent(state.jobId)}`);
-      const done = res.completed || 0;
-      const total = res.total || 0;
+      const [statusRes, logRes] = await Promise.all([
+        api(`/api/generate/status?job_id=${encodeURIComponent(state.jobId)}`),
+        api(`/api/generate/log?job_id=${encodeURIComponent(state.jobId)}&lines=14`).catch(() => ({ tail: "" })),
+      ]);
+      const done = statusRes.completed || 0;
+      const total = statusRes.total || 0;
       $("#jobCount").textContent = `${done} / ${total}`;
       $("#jobFill").style.width = total ? `${(done / total) * 100}%` : "0%";
-      if (res.status === "running") {
+      const log = $("#jobLog");
+      if (logRes.tail) {
+        const wasAtBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 10;
+        log.textContent = logRes.tail;
+        if (wasAtBottom) log.scrollTop = log.scrollHeight;
+      }
+      if (statusRes.status === "running") {
         state.pollHandle = setTimeout(pollJob, 2500);
       } else {
-        $("#jobLabel").textContent = res.status === "done" ? "Done — pool refreshing" : `Stopped: ${res.status}`;
+        $("#jobLabel").textContent = statusRes.status === "done" ? "Done — pool refreshing" : `Stopped: ${statusRes.status}`;
         genBtn.disabled = false;
         genBtn.textContent = "Generate batch";
         state.jobId = null;
+        // Trigger pipeline indexer so newly-generated PNGs hit DB before refresh.
+        api("/api/index", { method: "POST", body: JSON.stringify({ brand: state.brand }) }).catch(() => {});
         setTimeout(() => {
           $("#jobCard").classList.remove("show");
           loadPool();
           loadAllCounts();
-        }, 1400);
+        }, 1800);
       }
     } catch (err) {
       flash("Status poll failed");

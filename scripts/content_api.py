@@ -2810,6 +2810,33 @@ def start_generation_job(
     return {k: v for k, v in job.items() if not k.startswith("_")}
 
 
+def get_job_log(job_id: str, *, lines: int = 20) -> dict:
+    """Tail the last `lines` of the subprocess log file. Strips ANSI."""
+    with _GEN_JOBS_LOCK:
+        rec = _GEN_JOBS.get(job_id)
+    if not rec or not rec.get("log_file"):
+        return {"job_id": job_id, "tail": "", "missing": True}
+    log_path = pathlib.Path(rec["log_file"])
+    if not log_path.exists():
+        return {"job_id": job_id, "tail": "", "missing": True}
+    try:
+        # Read last ~64KB and split into lines so we don't load gigantic logs.
+        size = log_path.stat().st_size
+        with log_path.open("rb") as f:
+            if size > 65536:
+                f.seek(size - 65536)
+                f.readline()  # skip partial first line
+            data = f.read().decode("utf-8", errors="replace")
+        all_lines = [line for line in data.splitlines() if line.strip()]
+        tail = "\n".join(all_lines[-lines:])
+        # Strip simple ANSI color codes
+        import re as _re
+        tail = _re.sub(r"\x1b\[[0-9;]*m", "", tail)
+        return {"job_id": job_id, "tail": tail, "line_count": len(all_lines)}
+    except Exception as exc:  # noqa: BLE001
+        return {"job_id": job_id, "tail": "", "error": str(exc)}
+
+
 def get_job_status(job_id: str) -> dict:
     with _GEN_JOBS_LOCK:
         rec = _GEN_JOBS.get(job_id)
@@ -2991,6 +3018,12 @@ class ContentHandler(BaseHTTPRequestHandler):
                 qs = urllib.parse.parse_qs(parsed.query)
                 job_id = (qs.get("job_id") or [""])[0]
                 self._json(get_job_status(job_id))
+                return
+            if parsed.path == "/api/generate/log":
+                qs = urllib.parse.parse_qs(parsed.query)
+                job_id = (qs.get("job_id") or [""])[0]
+                lines = int((qs.get("lines") or ["20"])[0])
+                self._json(get_job_log(job_id, lines=max(1, min(lines, 200))))
                 return
             if parsed.path == "/api/feed-grid":
                 qs = urllib.parse.parse_qs(parsed.query)
