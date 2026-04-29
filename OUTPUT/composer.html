@@ -1407,8 +1407,10 @@
             rating +
             `<div class="card-state-mark"></div>` +
             `<div class="card-overlay">` +
-              `<button class="ov-btn pick"   data-act="pick"   data-id="${escHtml(a.id)}">Pick</button>` +
-              `<button class="ov-btn reject" data-act="reject" data-id="${escHtml(a.id)}">Reject</button>` +
+              (cardState === "rejected"
+                ? `<button class="ov-btn pick" data-act="restore" data-id="${escHtml(a.id)}">Restore</button>`
+                : `<button class="ov-btn pick" data-act="pick" data-id="${escHtml(a.id)}">Pick</button>` +
+                  `<button class="ov-btn reject" data-act="reject" data-id="${escHtml(a.id)}">Reject</button>`) +
             `</div>` +
           `</div>` +
           `<div class="card-meta">` +
@@ -1420,7 +1422,7 @@
     }).join("");
   }
 
-  // Card click → open lightbox; overlay button click → pick/reject (stop propagation)
+  // Card click → open lightbox; overlay button click → pick/reject/restore (stop propagation)
   $("#grid").addEventListener("click", (e) => {
     const ovBtn = e.target.closest(".ov-btn");
     if (ovBtn) {
@@ -1428,6 +1430,7 @@
       const id = ovBtn.dataset.id;
       if (ovBtn.dataset.act === "pick") doPick(id);
       else if (ovBtn.dataset.act === "reject") doReject(id);
+      else if (ovBtn.dataset.act === "restore") doRestore(id);
       return;
     }
     const card = e.target.closest(".card");
@@ -1463,6 +1466,20 @@
       renderLightbox();
     } catch (err) {
       flash("Reject failed: " + err.message);
+    }
+  }
+
+  async function doRestore(id) {
+    try {
+      await api("/api/status", { method: "POST", body: JSON.stringify({ asset_id: id, status: "new" }) });
+      const a = state.pool.find((x) => x.id === id);
+      if (a) a.status = "new";
+      flash("Restored");
+      updateFilterCounts();
+      renderGrid();
+      renderLightbox();
+    } catch (err) {
+      flash("Restore failed: " + err.message);
     }
   }
 
@@ -1503,8 +1520,9 @@
     $("#lbRating").textContent = a.rating ? `${a.rating}★` : "—";
     const stateLabel = normalizeStateOf(a);
     $("#lbStatus").textContent = stateLabel === "picked" ? "Picked" : stateLabel === "rejected" ? "Rejected" : (a.status || "new");
-    $("#lbPick").textContent = stateLabel === "picked" ? "✓ Picked" : "Pick";
-    $("#lbReject").textContent = stateLabel === "rejected" ? "✗ Rejected" : "Reject";
+    $("#lbPick").textContent = stateLabel === "picked" ? "Picked" : "Pick";
+    $("#lbReject").textContent = stateLabel === "rejected" ? "Restore" : "Reject";
+    $("#lbReject").dataset.mode = stateLabel === "rejected" ? "restore" : "reject";
   }
 
   $("#lbClose").addEventListener("click", closeLightbox);
@@ -1516,7 +1534,9 @@
   });
   $("#lbReject").addEventListener("click", () => {
     const a = state.filtered[state.lightboxIdx];
-    if (a) doReject(a.id);
+    if (!a) return;
+    if ($("#lbReject").dataset.mode === "restore") doRestore(a.id);
+    else doReject(a.id);
   });
   $("#lightbox").addEventListener("click", (e) => {
     if (e.target.id === "lightbox") closeLightbox();
